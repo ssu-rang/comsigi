@@ -1,0 +1,1 @@
+"""Comsigi backend application."""
