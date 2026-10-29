@@ -20,13 +20,6 @@
   --occ-ink: #4f534d;
   --unk-edge: #8a8d86;
 
-  --warn: #8a5300;
-  --warn-bg: #fff4e0;
-  --warn-edge: #e0a440;
-  --err: #b42318;
-  --err-bg: #fdecea;
-  --err-edge: #e98b82;
-
   --sans: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
   --pad: 20px;
 }
@@ -48,8 +41,7 @@
 /* ---------- Header ---------- */
 .topbar { border-bottom: 1px solid var(--line); }
 .topbar__inner,
-.layout,
-.mock__inner { max-width: 1180px; margin: 0 auto; padding-inline: var(--pad); }
+.layout { max-width: 1180px; margin: 0 auto; padding-inline: var(--pad); }
 .topbar__inner {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   min-height: 56px; padding-block: 10px;
@@ -84,9 +76,6 @@
   color: var(--avail-ink);
 }
 .summary__of { font-size: 22px; font-weight: 500; color: var(--ink-2); }
-.summary__past { margin-top: 6px; font-size: 13px; font-weight: 500; color: var(--err); }
-.summary--offline .summary__num { color: var(--line-strong); }
-.summary--stale .summary__num { color: var(--ink-3); }
 
 .summary__stats {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -97,7 +86,6 @@
 .summary__stats dt { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); white-space: nowrap; }
 .summary__stats dd { margin-top: 2px; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
 .summary__stats dd small { font-size: 15px; font-weight: 500; margin-left: 1px; color: var(--ink-2); }
-.summary--offline .summary__stats dd { color: var(--ink-3); }
 .summary__note { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
 
 /* Legend swatch = miniature seat tile */
@@ -106,36 +94,12 @@
 .swatch--occupied { background: var(--occ-fill); border: 1px solid var(--occ-edge); }
 .swatch--unknown { border: 1.5px dashed var(--unk-edge); }
 
-/* ---------- Feed status ---------- */
-.feed { font-size: 13px; color: var(--ink-2); }
-.feed__line { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 2px; }
-.feed__line strong { font-weight: 600; color: var(--ink); }
-.feed__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
-.feed__time { font-size: 13px; }
-.feed__detail { margin-top: 6px; line-height: 1.5; }
-.feed--connecting .feed__dot { background: transparent; border: 1.5px solid var(--ink-3); }
-.feed--stale,
-.feed--offline { padding: 12px 14px; border-left: 3px solid; }
-.feed--stale { background: var(--warn-bg); border-color: var(--warn-edge); color: var(--warn); }
-.feed--stale strong { color: var(--warn); }
-.feed--stale .feed__dot { background: var(--warn-edge); }
-.feed--offline { background: var(--err-bg); border-color: var(--err); color: var(--err); }
-.feed--offline strong { color: var(--err); }
-.feed--offline .feed__dot { border-radius: 1px; background: var(--err); }
-
-/* Brief highlight on each arrival: confirms the feed is alive */
-.feed__flash { animation: flash 1.2s ease-out; }
-@keyframes flash { from { background: #dcefe2; } to { background: transparent; } }
+.preview-note { font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 
 /* ---------- Seat grid ---------- */
 .seats__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 12px; }
 .seats__head h2 { font-size: 15px; font-weight: 600; }
 .seats__head p { font-size: 12px; color: var(--ink-3); }
-.seats__outdated {
-  margin-bottom: 12px; font-size: 13px; font-weight: 500; color: var(--ink-2);
-  padding-bottom: 10px; border-bottom: 1px dashed var(--line-strong);
-}
-.seats__empty { padding: 40px 0; color: var(--ink-3); font-size: 14px; }
 
 /* 5 columns on phones, 10 on wider screens: rows always break on a
    multiple of five, so seat numbers line up in predictable columns. */
@@ -146,9 +110,6 @@
 @media (min-width: 560px) {
   .seats__grid { grid-template-columns: repeat(10, minmax(0, 1fr)); max-width: 780px; gap: 8px; }
 }
-/* Fade but keep the encoding: a grayscale filter would turn "available"
-   into dark grey and read as "occupied". */
-.seats__grid--offline { opacity: 0.38; }
 
 .seat {
   position: relative; aspect-ratio: 5 / 4; display: grid; place-items: center;
@@ -162,39 +123,6 @@
 .seat__mark {
   position: absolute; top: 2px; right: 5px;
   font-size: 11px; font-weight: 600; line-height: 1; color: var(--ink-2);
-}
-
-/* State change cue: a short outline that fades, so changes are noticed */
-.seat--changed { animation: changed 1.6s ease-out; }
-@keyframes changed {
-  0%, 30% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
-  100% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px transparent; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .seat--changed, .feed__flash { animation: none; }
-}
-
-/* ---------- Mock controls (not part of the product UI) ---------- */
-.mock { border-top: 1px dashed var(--line-strong); background: #f6f6f3; }
-.mock__inner { padding-block: 20px 28px; display: grid; gap: 18px; }
-.mock__intro h2 { font-size: 13px; font-weight: 600; color: var(--ink-2); }
-.mock__intro p { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--ink-2); max-width: 46ch; }
-.mock__group { border: 0; padding: 0; margin: 0; min-width: 0; }
-.mock__group legend { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
-.segmented { display: flex; border: 1px solid var(--line-strong); border-radius: 3px; overflow: hidden; background: var(--bg); }
-.segmented button {
-  flex: 1; min-height: 44px; padding: 0 12px; font-size: 14px; color: var(--ink);
-  background: transparent; border: 0; cursor: pointer; white-space: nowrap;
-}
-.segmented button + button { border-left: 1px solid var(--line-strong); }
-.segmented button[aria-pressed="true"] { background: var(--ink); color: #fff; font-weight: 600; }
-.segmented button:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
-.segmented button[aria-pressed="true"]:focus-visible { outline-color: #fff; }
-
-@media (min-width: 960px) {
-  .mock__inner { grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 32px; }
-  .segmented button { min-height: 40px; padding: 0 16px; }
 }
 
 /* Desktop: the available count gets more room as the dominant figure */
