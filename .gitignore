@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.test-tmp/
 .mypy_cache/
 .ruff_cache/
 .pyre/
@@ -38,6 +39,10 @@ coverage.xml
 *.db
 *.sqlite
 *.sqlite3
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
 
 # Editors and operating systems
 .idea/
