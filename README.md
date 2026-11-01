@@ -13,7 +13,7 @@ uv run comsigi create-admin --username admin
 uv run comsigi serve --host 0.0.0.0 --port 8000
 ```
 
-관리자 비밀번호는 터미널에서 숨김 입력하며 최소 12자입니다. 기본 계정·기본 비밀번호는 없습니다. `.python-version`은 재현 가능한 개발 환경을 위해 Python 3.12를 지정합니다.
+관리자 비밀번호는 최소 12자, 최대 1024자입니다. `create-admin`과 `set-password`는 `COMSIGI_ADMIN_PASSWORD` 환경 변수 또는 `.env` 값을 사용하며, 설정하지 않으면 터미널에서 숨김 입력합니다. 기본 계정·기본 비밀번호는 없습니다. `.python-version`은 재현 가능한 개발 환경을 위해 Python 3.12를 지정합니다.
 
 설정을 변경하려면 `.env.example`을 `.env`로 복사하여 수정합니다. 기본 설정만 쓸 때는 복사하지 않아도 됩니다. `.env`는 자동으로 읽고 실제 환경 변수가 우선합니다. SQLite 경로는 **실행 디렉터리 기준**입니다. 운영 환경에서는 절대 경로를 사용하세요.
 
@@ -24,6 +24,45 @@ uv run comsigi serve --host 0.0.0.0 --port 8000
 - 전체 연동 계약: [docs/API.md](docs/API.md)
 
 개발 시 `uv run comsigi serve --reload`를 사용합니다. reload도 서버 재시작이므로 점유 상태·장치 세션·관리자 로그인 세션이 초기화됩니다. 비밀번호 변경은 `uv run comsigi set-password --username admin`이며, 기존 로그인 토큰은 다음 요청부터 거부됩니다.
+
+## Railway 배포
+
+루트의 [railway.toml](railway.toml)에 빌드와 시작 명령이 들어 있습니다. Railway가 배포할 때 DB 마이그레이션 → 관리자 계정 최초 생성 → 서버 실행을 자동으로 처리하므로 터미널에 명령을 입력할 필요가 없습니다. 관리자 이름은 `admin`이며, 기존 계정의 비밀번호는 그대로 유지합니다.
+
+Railway 화면에서 최초 한 번 설정합니다.
+
+1. GitHub 저장소를 백엔드 서비스에 연결합니다. 서비스의 Root Directory는 프로젝트 루트(`/`)로 두고, Config File은 `/railway.toml`을 사용합니다.
+2. 서비스에 Volume을 연결하고 Mount Path를 `/data`로 지정합니다.
+3. 서비스의 Variables에 아래 값을 등록합니다.
+4. Settings → Networking에서 Generate Domain으로 API 주소를 만들고 배포합니다. Build/Start Command는 파일에서 적용되므로 직접 입력하지 않습니다. Pre-deploy Command는 비워 둡니다.
+
+| 환경 변수 | 값 |
+| --- | --- |
+| `COMSIGI_ADMIN_PASSWORD` | 직접 정한 12–1024자 비밀번호 |
+| `COMSIGI_DATABASE_URL` | `sqlite+aiosqlite:////data/comsigi.db` |
+| `COMSIGI_CORS_ORIGINS` | `["https://실제-프론트엔드-도메인"]` |
+
+`COMSIGI_CORS_ORIGINS`에는 프론트엔드 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 프론트엔드는 [frontend/README.md](frontend/README.md#검증과-배포)에 따라 별도로 배포하고 API 주소를 연결합니다. 루트 설정은 백엔드 서비스용입니다.
+
+Volume은 관리자 계정·공간·배치·장치 설정을 재배포 후에도 유지합니다. DB 초기화가 실패하면 서버를 시작하지 않으며, Railway는 `/api/v1/ready`가 성공한 뒤 배포를 활성화합니다. 시작 명령은 Railway가 제공한 `PORT`를 사용하고, 서버는 단일 프로세스·replica 1개로 실행됩니다.
+
+Railway의 [설정 파일](https://docs.railway.com/config-as-code), [Volume](https://docs.railway.com/volumes), [시작 명령](https://docs.railway.com/deployments/start-command) 문서를 참고하세요. Volume은 Pre-deploy Command 컨테이너에 연결되지 않으므로 SQLite 초기화를 그곳으로 옮기지 않습니다.
+
+### 직접 서버를 실행할 때
+
+서버의 비밀 환경 변수에 `COMSIGI_ADMIN_PASSWORD`를 설정합니다. `COMSIGI_DATABASE_URL`은 영구 저장소의 SQLite 절대 경로, `COMSIGI_CORS_ORIGINS`는 실제 프론트엔드 Origin의 JSON 배열로 설정합니다. 비밀번호를 명령행 인자, 프론트엔드 `VITE_*` 변수, 저장소 파일에 넣지 않습니다.
+
+프로젝트 루트에서 다음 순서로 실행합니다. `prepare-deploy`가 성공한 뒤 `serve`를 실행합니다. 영구 볼륨을 쓰는 환경에서는 볼륨이 연결된 같은 컨테이너에서 두 명령을 실행합니다.
+
+```shell
+uv sync --locked
+uv run comsigi prepare-deploy --username admin
+uv run comsigi serve --host 0.0.0.0 --port 8000
+```
+
+`prepare-deploy`는 먼저 `alembic upgrade head`를 실행하고, 지정한 이름의 관리자 계정이 없을 때만 생성합니다. 최초 생성 시 비밀번호가 없거나 길이가 맞지 않으면 입력을 기다리지 않고 실패합니다. 이미 계정이 있으면 비밀번호 환경 변수가 바뀌거나 제거되어도 기존 비밀번호·활성화 상태를 그대로 유지하며 성공합니다. 재배포·재시작 때마다 실행해도 되지만, 같은 영구 DB를 사용해야 합니다.
+
+최초 생성 후에는 `COMSIGI_ADMIN_PASSWORD`를 제거해도 됩니다. 비밀번호를 변경하려면 새 값을 설정한 상태에서 `uv run comsigi set-password --username admin`을 명시적으로 실행하거나, 환경 변수를 제거하고 숨김 입력을 사용합니다. `serve`는 계정을 생성하거나 비밀번호를 변경하지 않습니다.
 
 ## 구현 범위
 
@@ -56,7 +95,7 @@ SQLite에는 장소, 좌석, 테이블, 배치, 장치 연결·인증 해시, �
 
 `GET /api/v1/places`로 장소를 선택하고 `/api/v1/places/{slug}/ws`에 연결합니다. 첫 `snapshot` 이벤트에 배치와 상태가 함께 있으므로 `seat.id`로 결합해 그리면 됩니다. 이후 `state_changed`는 일부 변경 항목, `layout_changed`는 전체 배치와 전체 상태를 담습니다. 재연결 시 새 스냅샷으로 교체합니다. 상세한 순서·연결 복구 규칙과 JavaScript 예제는 [API 문서](docs/API.md#websocket)를 참고하세요.
 
-기존 저장소 프론트엔드의 `GET /api/v1/seats`는 유지합니다. 장소가 하나이면 그 장소의 좌석을 반환하고, 여러 장소이면 `?place_slug=library`를 지정해야 합니다. 이 호환 경로의 `id`는 내부 ID이며 좌석 표시 번호가 아닙니다. 새 프론트엔드는 장소별 계약을 사용하세요. 프론트엔드 코드는 이번 구현에서 변경하지 않았습니다.
+기존 저장소 프론트엔드의 `GET /api/v1/seats`는 유지합니다. 장소가 하나이면 그 장소의 좌석을 반환하고, 여러 장소이면 `?place_slug=library`를 지정해야 합니다. 이 호환 경로의 `id`는 내부 ID이며 좌석 표시 번호가 아닙니다. 새 프론트엔드는 장소별 계약을 사용하세요. 현재 프론트엔드는 장소별 API·관리자 인증·배치 저장·장치 관리·WebSocket에 연결되어 있습니다. 실행 방법은 [frontend/README.md](frontend/README.md), 저장 보장과 검증 범위는 [frontend/INTEGRATION.md](frontend/INTEGRATION.md)를 확인하세요.
 
 ## 하드웨어 없이 연동 검증
 
@@ -80,7 +119,7 @@ app/
   schemas.py       HTTP 입출력 검증
   security.py      관리자 세션, 비밀번호·장치 키 검증
   realtime.py      메모리 상태, 순서·만료 처리, 구독 큐
-  cli.py           관리자 생성·비밀번호 변경, 단일 프로세스 실행
+  cli.py           배포 초기화, 관리자 생성·비밀번호 변경, 단일 프로세스 실행
   api/
     admin.py       관리 CRUD와 원자적 배치 저장
     auth.py        관리자 로그인·로그아웃

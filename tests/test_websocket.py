@@ -1,8 +1,11 @@
 import asyncio
 import time
 
+import anyio
 import pytest
-from starlette.websockets import WebSocketDisconnect
+from starlette.websockets import WebSocket, WebSocketDisconnect
+
+from app.api.router import websocket_endpoint
 
 
 def test_snapshot_delta_dedup_layout_and_place_isolation(api, client, setup_room):
@@ -38,6 +41,30 @@ def test_snapshot_delta_dedup_layout_and_place_isolation(api, client, setup_room
     with client.websocket_connect("/api/v1/places/library/ws") as ws:
         assert ws.receive_json()["state"]["seats"][0]["status"] == "occupied"
     assert client.app.state.runtime.subscribers == {}
+
+
+def test_asgi_cancellation_finishes_subscription_cleanup(client, setup_room):
+    async def cancel_connection():
+        messages = asyncio.Queue()
+        messages.put_nowait({"type": "websocket.connect"})
+        snapshot_sent = asyncio.Event()
+
+        async def send(message):
+            if message["type"] == "websocket.send":
+                snapshot_sent.set()
+
+        websocket = WebSocket(
+            {"type": "websocket", "app": client.app, "headers": []},
+            receive=messages.get,
+            send=send,
+        )
+        async with anyio.create_task_group() as group:
+            group.start_soon(websocket_endpoint, websocket, "library")
+            await snapshot_sent.wait()
+            group.cancel_scope.cancel()
+        assert client.app.state.runtime.subscribers == {}
+
+    client.portal.call(cancel_connection)
 
 
 def test_timeout_emits_event_without_an_http_request(api, client, setup_room):

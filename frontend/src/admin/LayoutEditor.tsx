@@ -73,7 +73,10 @@ type Gesture = {
   angle: number
   pointerId: number
 }
-function Editor({ place, original }: {
+function Editor({
+  place,
+  original,
+}: {
   place: Place
   original: Layout
 }) {
@@ -245,9 +248,8 @@ function Editor({ place, original }: {
     setSelection(selected)
     setTool("select")
     const current = historyRef.current.present
-    const element = (
-      selected.kind === "seat" ? current.seats : current.tables
-    ).find((x) => x.id === selected.id)!
+    const element = (selected.kind === "seat" ? current.seats : current.tables)
+      .find((x) => x.id === selected.id)!
     const p = point(e.clientX, e.clientY)
     gesture.current = {
       kind,
@@ -405,10 +407,7 @@ function Editor({ place, original }: {
       )}
       {remoteChanged && (
         <div className="notice conflict-notice" role="alert">
-          <p>
-            다른 창에서 저장된 배치가 있습니다. 현재 초안은 유지되며 최신 배치를
-            덮어쓰지 않습니다.
-          </p>
+          <p>서버의 최신 배치를 확인해야 합니다. 현재 초안은 유지됩니다.</p>
           <div className="row-actions">
             <button
               className="secondary-button"

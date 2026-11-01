@@ -1,6 +1,7 @@
 import asyncio
 import json
 
+from anyio import CancelScope
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -145,8 +146,11 @@ async def websocket_endpoint(websocket: WebSocket, slug: str):
     except (WebSocketDisconnect, OSError, TimeoutError):
         pass
     finally:
-        for task in tasks:
-            task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
-        async with runtime.lock:
-            runtime.unsubscribe(place_id, queue)
+        # ASGI task-group cancellation must not interrupt subscription cleanup.
+        # Shield the awaited cleanup from repeated AnyIO cancellation checkpoints.
+        with CancelScope(shield=True):
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            async with runtime.lock:
+                runtime.unsubscribe(place_id, queue)

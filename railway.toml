@@ -1,0 +1,11 @@
+[build]
+builder = "RAILPACK"
+
+[deploy]
+# SQLite volumes are available at startup, not in Railway's pre-deploy container.
+startCommand = 'python -m app.cli prepare-deploy --username admin && exec python -m app.cli serve --host 0.0.0.0 --port "${PORT:-8000}"'
+numReplicas = 1
+healthcheckPath = "/api/v1/ready"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

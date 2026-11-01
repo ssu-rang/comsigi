@@ -20,10 +20,10 @@ export function messageOf(error: unknown) {
     ? error.message
     : "요청을 처리하지 못했습니다. 다시 시도해 주세요."
 }
-
-const base = (import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")
-// Only verified routes may be passed here. Authentication options are deliberately
-// not assumed: the eventual adapter must choose cookie/CSRF or bearer semantics.
+export const apiBase = (import.meta.env?.VITE_API_BASE_URL ?? "").replace(
+  /\/$/,
+  "",
+)
 export async function requestJson<T>(
   path: string,
   options: RequestInit = {},
@@ -34,26 +34,31 @@ export async function requestJson<T>(
   if (options.signal?.aborted) controller.abort()
   const timeout = setTimeout(abort, 10000)
   try {
-    const response = await fetch(base + path, {
+    const response = await fetch(apiBase + path, {
       ...options,
       cache: "no-store",
       signal: controller.signal,
     })
     const body = await response.json().catch(() => null)
     if (!response.ok) {
-      if (response.status === 401)
-        window.dispatchEvent(new Event("auth-expired"))
       const detail = body?.detail
       const fields: Record<string, string> = {}
-      if (Array.isArray(detail))
-        for (const item of detail)
+      const details = body?.error?.details ?? detail
+      if (Array.isArray(details))
+        for (const item of details)
           fields[item.loc?.slice(1).join(".") ?? "request"] = String(item.msg)
       throw new ApiError(
-        typeof detail === "string"
-          ? detail
-          : response.status === 401
-            ? "인증이 만료되었습니다. 다시 로그인해 주세요."
-            : `요청을 처리하지 못했습니다 (${response.status}).`,
+        body?.error?.code === "invalid_credentials"
+          ? "관리자 이름 또는 비밀번호가 올바르지 않습니다."
+          : body?.error?.code === "layout_version_conflict"
+            ? "다른 곳에서 배치가 변경되었습니다. 최신 배치를 확인해 주세요."
+            : typeof body?.error?.message === "string"
+              ? body.error.message
+              : typeof detail === "string"
+                ? detail
+                : response.status === 401
+                  ? "인증이 만료되었습니다. 다시 로그인해 주세요."
+                  : `요청을 처리하지 못했습니다 (${response.status}).`,
         response.status,
         fields,
       )
@@ -74,14 +79,15 @@ export async function requestJson<T>(
     options.signal?.removeEventListener("abort", abort)
   }
 }
-
-// These are the ONLY HTTP routes verified in app/api/router.py.
+// Legacy endpoints retained for older callers.
 export const checkHealth = () =>
   requestJson<{ status: string }>("/api/v1/health")
 export const getLegacySeats = (signal?: AbortSignal) =>
-  requestJson<{ seats: {
-    id: number
-    status: string
-  }[] }>("/api/v1/seats", {
+  requestJson<{
+    seats: {
+      id: number
+      status: string
+    }[]
+  }>("/api/v1/seats", {
     signal,
   })

@@ -59,10 +59,10 @@ export function validateLayout(layout: Layout): string[] {
   const errors: string[] = []
   if (
     ![layout.canvasWidth, layout.canvasHeight].every(
-      (n) => Number.isFinite(n) && n >= 100 && n <= 10000,
+      (n) => Number.isFinite(n) && n > 0 && n <= 100000,
     )
   )
-    errors.push("캔버스 크기는 100~10,000 사이여야 합니다.")
+    errors.push("캔버스 크기는 0 초과, 100,000 이하여야 합니다.")
   const ids = new Set<string>()
   for (const [kind, items] of [
     ["좌석", layout.seats],
@@ -75,27 +75,26 @@ export function validateLayout(layout: Layout): string[] {
       if (
         !Number.isSafeInteger(e.number) ||
         e.number < 1 ||
+        e.number > 2147483647 ||
         numbers.has(e.number)
       )
         errors.push(`${kind} 번호는 중복 없는 양의 정수여야 합니다.`)
       numbers.add(e.number)
       if (
         ![e.x, e.y, e.width, e.height, e.rotation].every(Number.isFinite) ||
-        e.width < 20 ||
-        e.height < 20 ||
+        e.width <= 0 ||
+        e.height <= 0 ||
         e.rotation < 0 ||
         e.rotation >= 360
       )
         errors.push(
-          `${kind} ${e.number}: 크기는 20 이상, 회전각은 0~359여야 합니다.`,
+          `${kind} ${e.number}: 크기는 0 초과, 회전각은 0 이상 360 미만이어야 합니다.`,
         )
-      const b = bounds(e),
-        tolerance = 0.01
       if (
-        b.cx - b.halfWidth < -tolerance ||
-        b.cy - b.halfHeight < -tolerance ||
-        b.cx + b.halfWidth > layout.canvasWidth + tolerance ||
-        b.cy + b.halfHeight > layout.canvasHeight + tolerance
+        e.x < 0 ||
+        e.y < 0 ||
+        e.x + e.width > layout.canvasWidth ||
+        e.y + e.height > layout.canvasHeight
       )
         errors.push(`${kind} ${e.number}: 캔버스 범위를 벗어났습니다.`)
     }

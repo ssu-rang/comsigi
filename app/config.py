@@ -1,12 +1,18 @@
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="COMSIGI_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="COMSIGI_", env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     database_url: str = "sqlite+aiosqlite:///./comsigi.db"
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    cors_origins: list[str] = [
+        f"http://{host}:{port}"
+        for host in ("localhost", "127.0.0.1")
+        for port in (5173, 8443, 4173)
+    ]
     device_timeout_seconds: float = Field(default=30, gt=0)
     seat_timeout_seconds: float = Field(default=30, gt=0)
     sweep_interval_seconds: float = Field(default=1, gt=0)
@@ -29,3 +35,9 @@ class Settings(BaseSettings):
         if "*" in value:
             raise ValueError("Specify explicit browser origins, not '*'")
         return value
+
+
+class AdminSettings(Settings):
+    """Read the bootstrap password only for administrator CLI commands."""
+
+    admin_password: SecretStr | None = Field(default=None, repr=False, exclude=True)

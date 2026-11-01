@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import type { Device, DeviceInput, Place } from "../domain"
 import { timestamp } from "../domain"
 import { service } from "../service"
@@ -52,7 +52,11 @@ export function DevicesAdmin() {
         {resource.loading ? (
           <Loading />
         ) : resource.data?.devices.length ? (
-          <div className="table-scroll" tabIndex={0} aria-label="장치 목록. 표가 화면보다 넓으면 가로로 스크롤할 수 있습니다.">
+          <div
+            className="table-scroll"
+            tabIndex={0}
+            aria-label="장치 목록. 표가 화면보다 넓으면 가로로 스크롤할 수 있습니다."
+          >
             <table className="data-table">
               <thead>
                 <tr>
@@ -94,7 +98,11 @@ export function DevicesAdmin() {
                       </span>
                       <small>마지막 수신 {timestamp(device.lastSeenAt)}</small>
                     </td>
-                    <td className="num" data-label="담당 좌석">{device.seatIds.length}석</td>
+                    <td className="num" data-label="담당 좌석">
+                      {service.mode === "api"
+                        ? "공간 전체"
+                        : `${device.seatIds.length}석`}
+                    </td>
                     <td data-label="관리">
                       <div className="row-actions">
                         <button
@@ -328,6 +336,7 @@ function DeviceForm({
               required
               maxLength={100}
               readOnly={!!device}
+              pattern={service.mode === "api" ? "[a-zA-Z0-9_-]+" : undefined}
             />
           </label>
           <label className="field">
@@ -354,79 +363,89 @@ function DeviceForm({
             />
             장치 활성화
           </label>
-          <div className="section-heading">
-            <h3>
-              담당 좌석 <span>{seatIds.length}석</span>
-            </h3>
-            <Link
-              className="inline-link"
-              to={`/admin/layout/${placeId}`}
-              target="_blank"
-            >
-              배치 확인 ↗
-            </Link>
-          </div>
-          <ErrorNotice error={layout.error} retry={layout.reload} />
-          {layout.loading ? (
-            <Loading label="좌석을 확인하고 있습니다" />
+          {service.mode === "api" ? (
+            <p className="field-help">
+              이 장치는 연결된 공간의 모든 좌석 번호를 보고할 수 있습니다. 여러
+              장치가 같은 좌석을 감지할 수 있으며, 감지 영역과 좌석 번호는
+              장치에서 설정합니다.
+            </p>
           ) : (
             <>
-              <div className="row-actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSeatIds(
-                      layout.data?.seats
-                        .filter((s) => !reserved.has(s.id))
-                        .map((s) => s.id) ?? [],
-                    )
-                  }
+              <div className="section-heading">
+                <h3>
+                  담당 좌석 <span>{seatIds.length}석</span>
+                </h3>
+                <Link
+                  className="inline-link"
+                  to={`/admin/layout/${placeId}`}
+                  target="_blank"
                 >
-                  선택 가능한 좌석 전체
-                </button>
-                <button type="button" onClick={() => setSeatIds([])}>
-                  선택 해제
-                </button>
+                  배치 확인 ↗
+                </Link>
               </div>
-              <div className="assignment-grid">
-                {layout.data?.seats
-                  .slice()
-                  .sort((a, b) => a.number - b.number)
-                  .map((seat) => (
-                    <label
-                      key={seat.id}
-                      className={reserved.has(seat.id) ? "reserved" : ""}
+              <ErrorNotice error={layout.error} retry={layout.reload} />
+              {layout.loading ? (
+                <Loading label="좌석을 확인하고 있습니다" />
+              ) : (
+                <>
+                  <div className="row-actions">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSeatIds(
+                          layout.data?.seats
+                            .filter((s) => !reserved.has(s.id))
+                            .map((s) => s.id) ?? [],
+                        )
+                      }
                     >
-                      <input
-                        type="checkbox"
-                        checked={seatIds.includes(seat.id)}
-                        disabled={reserved.has(seat.id)}
-                        onChange={(e) =>
-                          setSeatIds((ids) =>
-                            e.target.checked
-                              ? [...ids, seat.id]
-                              : ids.filter((id) => id !== seat.id),
-                          )
-                        }
-                      />
-                      <span>
-                        {seat.number}번
-                        {reserved.has(seat.id) && <small>다른 장치</small>}
-                      </span>
-                    </label>
-                  ))}
-              </div>
-              {!layout.data?.seats.length && (
-                <p className="notice">
-                  배치 편집기에서 좌석을 먼저 추가하고 저장해 주세요.
-                </p>
+                      선택 가능한 좌석 전체
+                    </button>
+                    <button type="button" onClick={() => setSeatIds([])}>
+                      선택 해제
+                    </button>
+                  </div>
+                  <div className="assignment-grid">
+                    {layout.data?.seats
+                      .slice()
+                      .sort((a, b) => a.number - b.number)
+                      .map((seat) => (
+                        <label
+                          key={seat.id}
+                          className={reserved.has(seat.id) ? "reserved" : ""}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={seatIds.includes(seat.id)}
+                            disabled={reserved.has(seat.id)}
+                            onChange={(e) =>
+                              setSeatIds((ids) =>
+                                e.target.checked
+                                  ? [...ids, seat.id]
+                                  : ids.filter((id) => id !== seat.id),
+                              )
+                            }
+                          />
+                          <span>
+                            {seat.number}번
+                            {reserved.has(seat.id) && <small>다른 장치</small>}
+                          </span>
+                        </label>
+                      ))}
+                  </div>
+                  {!layout.data?.seats.length && (
+                    <p className="notice">
+                      배치 편집기에서 좌석을 먼저 추가하고 저장해 주세요.
+                    </p>
+                  )}
+                </>
               )}
+              <p className="field-help">
+                표시된 번호가 장치가 전송하는 좌석 번호입니다. 공간을 변경하면
+                담당 좌석 선택이 초기화됩니다.
+              </p>
             </>
           )}
-          <p className="field-help">
-            표시된 번호가 장치가 전송하는 좌석 번호입니다. 공간을 변경하면 담당
-            좌석 선택이 초기화됩니다.
-          </p>
         </fieldset>
         <ErrorNotice error={error} />
         <div className="form-actions">

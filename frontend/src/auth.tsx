@@ -78,12 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (next.role !== "admin") throw new Error("관리자 권한이 없습니다.")
           setSession(next)
           setExpired(false)
+          setError(null)
         },
         logout: async () => {
-          await service.logout()
-          setSession(null)
-          setExpired(false)
-          navigate("/admin/login")
+          try {
+            await service.logout()
+          } finally {
+            setSession(null)
+            setExpired(false)
+            navigate("/admin/login")
+          }
         },
       }}
     >

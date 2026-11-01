@@ -14,6 +14,7 @@ export type LiveState = {
   occupancy: Occupancy
   staleAfterMs: number
   synced: boolean
+  layout?: Layout
 }
 export const initialLive = (): LiveState => ({
   streamId: null,
@@ -31,6 +32,13 @@ export function applyEvent(
   resync: boolean
 } {
   if (event.type === "snapshot") {
+    if (
+      event.incremental &&
+      (!state.synced ||
+        state.streamId !== event.streamId ||
+        event.version > state.version + 1)
+    )
+      return { state, resync: true }
     if (state.streamId === event.streamId && event.version < state.version)
       return { state, resync: false }
     if (
@@ -47,10 +55,19 @@ export function applyEvent(
         occupancy: event.seats,
         staleAfterMs: event.staleAfterMs,
         synced: true,
+        layout: event.layout,
       },
       resync: false,
     }
   }
+  if (event.type === "place_deleted" && event.streamId !== undefined)
+    return {
+      state,
+      resync:
+        !state.synced ||
+        event.streamId !== state.streamId ||
+        event.version !== state.version + 1,
+    }
   if (event.type !== "seat_update") return { state, resync: false }
   if (!state.synced || event.streamId !== state.streamId)
     return { state, resync: true }
@@ -78,8 +95,9 @@ export function visibleSeats(
     const fresh =
       connection === "live" &&
       live.synced &&
-      Number.isFinite(time) &&
-      now - time <= live.staleAfterMs
+      !!reading &&
+      (live.staleAfterMs === Infinity ||
+        (Number.isFinite(time) && now - time <= live.staleAfterMs))
     return {
       ...seat,
       status: fresh ? reading.status : "unknown" as const,
@@ -99,7 +117,7 @@ export type SocketLike = {
   onerror: ((event: Event) => void) | null
 }
 export type SocketContract = {
-  url: string
+  url: string | (() => Promise<string | null>)
   // REQUIRED verified backend decoder. We do not assume the example JSON protocol.
   decode: (data: unknown) => LiveEvent | "heartbeat" | null
   createSocket?: (url: string) => SocketLike
@@ -120,9 +138,7 @@ export function secureSocketUrl(url: string, pageProtocol: string): string {
 }
 export const retryDelay = (attempt: number, random = Math.random()) =>
   Math.min(30000, 1000 * 2 ** Math.min(attempt, 5)) * (0.8 + random * 0.4)
-
-// Opt-in transport for the future adapter. Nothing instantiates it until an actual
-// endpoint and protocol decoder are supplied. Every reconnect requires a snapshot.
+// Every reconnect requires a full snapshot before any incremental events.
 export function connectSocket(
   placeId: Id,
   contract: SocketContract,
@@ -145,17 +161,27 @@ export function connectSocket(
     sink.connection("reconnecting")
     retry = setTimeout(start, retryDelay(attempt++, contract.random?.()))
   }
-  const start = () => {
+  const start = async () => {
     if (stopped) return
     const current = ++generation
     state = initialLive()
     lastMessage = Date.now()
     sink.connection(attempt ? "reconnecting" : "connecting")
     try {
+      const url =
+        typeof contract.url === "function" ? await contract.url() : contract.url
+      if (stopped || current !== generation) return
+      if (url === null) {
+        stopped = true
+        sink.event({ type: "place_deleted", placeId })
+        sink.connection("offline")
+        return
+      }
       socket = (contract.createSocket ?? ((url) => new WebSocket(url)))(
-        secureSocketUrl(contract.url, globalThis.location?.protocol ?? "http:"),
+        secureSocketUrl(url, globalThis.location?.protocol ?? "http:"),
       )
     } catch {
+      if (stopped || current !== generation) return
       schedule()
       return
     }
@@ -182,8 +208,21 @@ export function connectSocket(
           fail()
           return
         }
+        if (
+          result.state === state &&
+          (event.type === "seat_update" || event.type === "snapshot")
+        )
+          return
         state = result.state
         sink.event(event)
+        if (event.type === "place_deleted") {
+          stopped = true
+          ++generation
+          clearWatchdog()
+          active.close()
+          sink.connection("offline")
+          return
+        }
         if (event.type === "snapshot") {
           attempt = 0
           sink.connection("live")

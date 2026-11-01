@@ -1,5 +1,4 @@
-// Frontend domain model. This is NOT a claim about an implemented backend schema.
-// A future backend adapter must explicitly map its verified contract to these types.
+// UI models; backend-contract.ts maps the server's snake_case fields and IDs.
 import type { SeatStatus } from "./seats"
 
 export type Id = string
@@ -82,6 +81,8 @@ export type LiveEvent = {
   revision: number
   seats: Occupancy
   staleAfterMs: number
+  layout?: Layout
+  incremental?: boolean
 } | {
   type: "seat_update"
   placeId: Id
@@ -95,6 +96,8 @@ export type LiveEvent = {
 } | {
   type: "place_deleted"
   placeId: Id
+  streamId?: string
+  version?: number
 }
 export type LiveSink = {
   event: (event: LiveEvent) => void

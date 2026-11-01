@@ -1,76 +1,56 @@
-# 백엔드 통합 상태
+# 백엔드 통합
 
-2026-11-01 조사 기준. 사용자 지시에 따라 백엔드 파일은 수정하지 않았습니다.
+2026-11-01. 현재 구현된 `app/api/*`, `app/schemas.py`, [docs/API.md](../docs/API.md)를 기준으로 연결했습니다. 백엔드 API 스키마는 유지했습니다. 개발/preview 포트의 Origin 허용과 취소 중에도 WebSocket 구독 해제를 완료하는 정리 처리를 보완했습니다.
 
-## 실제로 확인한 계약
+## 연결 구조
 
-`app/main.py`는 FastAPI 앱에 `app/api/router.py`를 `/api/v1` 접두사로 등록합니다.
+- `api.ts`: 요청 timeout/취소, 204, `error.code/message/details`와 FastAPI `detail` 해석.
+- `backend-contract.ts`: 응답 검증, snake_case와 화면 모델 변환, WS 디코딩.
+- `backend.ts`: 실제 공개 API·관리 API·메모리 Bearer 세션·WS 연결.
+- `backend-layout.ts`: 기존 CRUD 및 버전 기반 PUT을 이용한 편집 저장.
+- `realtime.ts`: 전체 스냅샷, 연속 revision 검사, 지수 backoff, 단절 표시·정리.
+- `service.ts`: 기본 실제 API. 명시적인 개발 환경에서만 시뮬레이터 로드.
 
-| 경로 | 실제 동작 |
+| 화면 작업 | 백엔드 계약 |
 | --- | --- |
-| `GET /api/v1/health` | `{ "status": "ok" }` |
-| `GET /api/v1/seats` | `{ "seats": [] }`; 모델은 양의 정수 `id`와 `available / occupied / unknown` 상태 |
+| 목록·상세 | `GET /places`, `GET /places/{slug}/snapshot` |
+| 로그인·확인·로그아웃 | `POST /auth/token`, `GET /auth/me`, `DELETE /auth/token` |
+| 공간 관리 | `/admin/places` POST, `/{id}` PATCH/DELETE |
+| 배치 저장 | `/admin/places/{id}/seats`, `/tables` CRUD 후 `/layout` PUT |
+| 장치 관리 | `/admin/devices`, `/{id}`, `/{id}/rotate-credential` |
+| 실시간 | `/places/{slug}/ws` |
 
-장소, 배치, 인증, 관리자 권한, 장치, WebSocket 구현 및 계약은 현재 없습니다.
-요청에 포함된 `/api/places`, `/ws/places/{placeId}` 등은 구현된 경로로 간주하지 않았습니다.
-기본 앱은 이 경로들에 요청하지 않으며, 가상 장소로 대체하지 않습니다.
-기존에 검증된 두 경로의 HTTP 함수만 `src/api.ts`에 남겨 두었습니다.
+위 경로의 공통 접두사는 `/api/v1`입니다. UI 경로는 안정적인 장소 ID를 유지하고 공개 조회 및 WS 연결에서 slug를 해석합니다. 재연결 때 slug를 다시 찾아 이름 변경 이후에도 복구합니다. 삭제된 장소는 종료 상태로 전환하고 재시도를 중단합니다.
 
-## 현재 프론트엔드 경계
+## 데이터 의미
 
-- `src/domain.ts`: 화면에서 필요한 내부 모델과 `SeatService` 인터페이스. 서버 스키마가 아닙니다.
-- `src/backend.ts`: 아직 연결되지 않은 운영 어댑터. 미지원 작업은 명시적인 오류로 종료합니다.
-- `src/service.ts`: 기본은 운영 어댑터. **개발 서버 + 명시적인 환경 변수**일 때만 개발 저장소를 동적 로드합니다.
-- `src/dev/service.ts`: 브라우저 저장소를 사용하는 UI 검증 시뮬레이터. 실제 API·인증 서버·장치 수신 서버가 아닙니다.
-- `src/realtime.ts`: 검증된 endpoint와 decoder가 주입되어야 사용할 수 있는 WebSocket 전송 로직. 기본 앱은 WebSocket을 열지 않습니다.
+- 좌석 ID와 테이블 ID는 서로 다른 DB 시퀀스입니다. 화면에서는 `seat:1`, `table:1`로 분리하고 저장할 때 정수로 변환합니다. 새 요소의 UUID는 생성 응답의 ID로 바꾸고 테이블 연결을 함께 갱신합니다.
+- `circle`은 기존 화면의 `ellipse` 렌더러에 매핑합니다. 좌표는 좌상단 원점, 중심 회전이며 API의 회전 전 경계 검증을 따릅니다. 테이블/좌석 label은 편집 UI에 노출하지 않고 기존 값을 유지합니다.
+- summary는 snapshot에서 가져오며 이용률은 `occupied / (available + occupied)`입니다. unknown은 이용 가능으로 계산하지 않습니다.
+- 장치는 소속 장소 전체를 보고할 수 있습니다. 담당 좌석 ACL·장치 revision은 백엔드에 없으므로 요청에 보내지 않으며 운영 UI에서 좌석 선택을 제공하지 않습니다.
+- 관리자 토큰은 localStorage/sessionStorage/URL에 저장하지 않습니다. 관리자 요청의 401은 메모리 세션과 화면 인증을 해제합니다. 로그인 실패나 공개 API 실패는 관리자 만료로 오인하지 않습니다.
 
-개발 로그인, localStorage 저장, 토큰 해시, 장치 데이터 입력은 개발 모드 전용입니다.
-브라우저 저장소로 서버 인증이나 접근 제어를 대신했다고 간주하면 안 됩니다.
-운영 빌드에서는 개발 모듈·계정·장소·시뮬레이터가 제거됩니다. URL이나 localStorage 값으로 활성화할 수 없습니다.
+## 실시간
 
-## 실제 계약을 받은 뒤 연결할 항목
+`snapshot`과 `layout_changed`의 배치·상태를 함께 화면에 반영합니다. `state_changed`는 ID별로 병합합니다. `layout_changed`도 revision 연속성 검사에 포함하며 누락·server_id 변경 시 새 연결의 snapshot을 요구합니다. 장치만 바뀐 이벤트도 revision을 소비합니다. `place_deleted`는 연결 종료 후 재연결하지 않습니다.
 
-1. 실제 OpenAPI 및 라우터에서 장소·배치·장치 요청/응답을 확인하고 `backend.ts`의 메서드를 구현합니다. 응답을 내부 모델로 명시적으로 변환하고 런타임 검증을 추가합니다.
-2. 로그인, 세션 확인, 로그아웃과 관리자 권한을 확인합니다. Cookie/CSRF 또는 bearer 방식에 맞게 `requestJson` 옵션을 지정합니다. 현재 구현은 어떤 방식을 가정해 토큰을 저장하지 않습니다.
-3. 좌표 원점, 회전 중심, 단위, ID/번호 구분, 허용 형태, 캔버스 축소 및 삭제 정책을 매핑합니다. UI의 좌표는 좌상단 x/y, 요소 중심 회전, 논리 좌표 단위입니다.
-4. 배치 revision의 충돌 응답을 `ApiError(…, 409)`로, 인증 만료를 401로 매핑합니다. 저장 응답은 서버가 확정한 전체 배치여야 합니다. 임시 UUID가 서버 ID로 치환되는 경우 테이블/장치 연결까지 매핑합니다.
-5. 실제 WebSocket 메시지의 decoder를 구현한 뒤 `connectSocket`을 사용합니다. 클라이언트에 맞춰 서버 프로토콜을 임의로 바꾸지 않습니다.
-6. 감지 시각과 유효 기간을 서버 기준으로 매핑합니다. transport 연결과 sensor freshness를 분리합니다. 현재 내부 이용률은 `occupied / (available + occupied)`의 정수 백분율이며, 알려진 좌석이 없으면 `null`입니다. 서버 계산 기준이 다르면 한 곳에서 일치시켜야 합니다.
-7. 장소 삭제의 좌석·테이블·장치 영향, 담당 좌석 중복 검증, 토큰 재발급 정책을 실제 서버와 맞추고 사용자 설명도 갱신합니다.
-8. 동일 출처 reverse proxy 또는 CORS 설정을 확인합니다. HTTPS 사이트의 소켓에는 WSS를 사용합니다. 인증 정보를 URL에 넣지 않습니다.
+서버는 같은 상태를 반복 보고받으면 이벤트를 생략할 수 있으므로, 클라이언트가 수신 시각에서 임의로 30초 만료를 계산하지 않습니다. unknown 판정은 서버 이벤트를 따르고 연결 단절 중에는 모든 좌석을 unknown으로 표시합니다. 표시된 수신 시각은 마지막 전달된 상태에 포함된 값이며 매 보고마다 갱신되는 값은 아닙니다.
 
-### 내부 실시간 이벤트
+15초마다 애플리케이션 ping을 보내고 45초 침묵 또는 10초 snapshot 지연 시 재연결합니다. 초기 실행/종료 및 비동기 URL 해석 중 취소를 처리합니다. 개발/preview 프록시는 `ws: true`이며 운영에서도 Upgrade 전달과 명시적인 Origin 등록이 필요합니다.
 
-이 이벤트는 **서버의 JSON 계약이 아니라 어댑터의 출력 타입**입니다.
+## 저장 보장과 제한
 
-- snapshot: 장소 ID, 재시작을 구분할 stream ID, 버전, 배치 revision, 좌석별 상태/감지 시각, 서버 기준 유효 기간.
-- seat_update: 장소/stream ID, 연속 버전, 변경된 좌석들의 상태/감지 시각.
-- layout_updated: 장소 ID와 새 배치 revision.
-- place_deleted: 장소 ID.
+좌표만 변경한 저장은 서버의 `expected_version` PUT으로 원자적 충돌 검사를 받습니다. 서버는 기존 모든 ID를 요구하므로 구조 변경을 PUT에 임의로 넣지 않습니다.
 
-중복/과거 이벤트는 무시하고 누락·stream 변경 시 재연결 후 snapshot을 요구합니다.
-재시도는 1초부터 지수 증가하고 최대 기본 30초에 jitter를 적용합니다. snapshot 대기 시간은 10초입니다.
-heartbeat/ping payload와 silence timeout은 확인된 프로토콜이 지원할 때만 설정합니다.
-StrictMode 첫 setup/cleanup은 연결 전에 취소됩니다. 전환·언마운트 시 타이머와 소켓을 정리합니다.
-재연결 snapshot의 revision도 REST 배치와 비교하므로 놓친 배치 변경을 다시 조회합니다.
+구조 변경은 사전 버전 확인 → 필요 시 캔버스 확장 → 삭제 → 번호 교환을 위한 임시 번호 → 테이블 생성/변경 → 좌석 생성/연결 → 최종 좌표 PUT 순으로 처리합니다. 각 쓰기 후 layout_version 증가를 확인합니다. 오류나 응답 유실 시 자동 재시도하지 않고 초안을 유지하며 일부 저장 가능성을 알립니다. 최신 배치를 내려받아 확인 후 다시 시작할 수 있습니다.
 
-## 아직 실제 API로 검증하지 않은 항목
+**개별 CRUD는 서버에서 버전 조건을 받지 않습니다.** 전체 구조 변경의 원자성이나 동시 편집 방지는 보장할 수 없습니다. 사전/사후 검사는 경쟁 조건 자체를 제거하지 못합니다. 같은 공간의 구조 편집을 동시에 하지 마세요. 번호 변경은 장치 세션을 초기화하므로 저장 후 펌웨어 번호 매핑도 확인해야 합니다. 공간 PATCH/DELETE와 장치 PATCH도 서버 계약대로 버전 조건 없이 수행합니다.
 
-전체 장소 CRUD, 관리자 인증/접근 제어, 배치 저장/충돌, 장치 토큰/담당 좌석,
-네트워크 WebSocket, 하드웨어 입력, 실제 서버 재시작 후 데이터 영속성과 unknown 초기화.
-현재 완료한 테스트는 프론트엔드 단위 테스트와 개발 시뮬레이터를 사용하는 실제 브라우저 테스트입니다.
-개발 도구의 ‘감지 정보 초기화’는 실제 서버 재시작 테스트가 아닙니다.
+## 검증
 
-## 디자인 적용
-
-기존 taste-skill 방향 `Achromatic ledger` (seed `341211071`)와 IBM Plex Sans KR,
-녹색 좌석 상태, 8px 패널/6px 컨트롤, 공간 목록 및 좌석 요약 구성을 유지했습니다. 새 추첨이나 스타일 변경은 하지 않았습니다.
-사용자 화면의 질문은 ‘어느 공간에 빈 좌석이 있는가’, 관리자는 ‘공간 배치가 올바른가’, 장치는 ‘어떤 좌석을 감지하는가’입니다.
-
-- [NN/g 사용성 휴리스틱](https://www.nngroup.com/articles/ten-usability-heuristics/): 연결·저장 상태 가시화, 실행 취소, 삭제 확인, 복구 가능한 오류.
-- [Fitts의 법칙](https://lawsofux.com/fittss-law/): 모바일 제어 버튼의 터치 영역, 배치도 확대 및 별도 번호순 좌석 보기.
-- [근접성 원칙](https://lawsofux.com/law-of-proximity/): 배치 도구·캔버스·선택 요소 속성의 기능별 묶음.
-- [Carbon 빈 상태](https://www.carbondesignsystem.com/building-blocks/core/patterns/empty-states): 데이터 부재, 검색 결과 없음, 연결 준비 상태를 구분하고 가능한 다음 동작 표시.
-- Material 3 웹페이지는 JavaScript 요구 화면만 반환하여 본문을 확인하지 못했습니다. 확인한 원칙의 근거로 사용하지 않았습니다.
-
-제품 화면에 새로운 이미지나 장식, 외부 컴포넌트 라이브러리를 추가하지 않았습니다.
+- 프론트 단위 테스트: 기존 테스트 및 ID 변환·응답 오류·상태 freshness·배치 이벤트 누락·부분 저장 실패·오래된 초안 거부.
+- `tests/test_frontend.py`: 실제 Uvicorn + 임시 SQLite + production 어댑터로 인증, 공간 CRUD, 좌석/테이블 생성·번호 교환·연결·삭제, 배치 충돌, 장치 등록·활성화·키 교체, 하드웨어 보고·만료, WS 갱신, slug 변경 후 재연결, 장소 삭제·로그아웃을 검증합니다. 직접 연결과 Vite 프록시 경유를 모두 검사합니다.
+- 브라우저 Origin을 포함한 실제 WebSocket handshake도 프록시 경유로 확인합니다.
+- TypeScript 검사·운영 빌드 및 개발 fixture 제거 검사 통과.
+- 전체 회귀 검증에서 발견한 ASGI 취소 시 구독 잔류를 수정하고 명시적인 취소 회귀 테스트를 추가했습니다.
+- 이번 작업의 브라우저 화면 조작 검증은 브라우저 제어 호스트 연결 불가로 완료하지 못했습니다. 기존 시뮬레이터 화면 검증과 구분합니다.

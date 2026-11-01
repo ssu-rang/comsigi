@@ -51,7 +51,11 @@ export function useLive(
   useEffect(() => {
     // A reconnect may have missed layout_updated. The snapshot revision is also
     // authoritative; compare it after REST resolves, regardless of arrival order.
-    if (layoutRevision !== undefined && live.revision > layoutRevision)
+    if (
+      !live.layout &&
+      layoutRevision !== undefined &&
+      live.revision > layoutRevision
+    )
       callback.current()
   }, [layoutRevision, live.revision])
   useEffect(() => {

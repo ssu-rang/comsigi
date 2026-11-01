@@ -286,7 +286,12 @@ function PlaceDetail({
   const seats = useMemo(
     () =>
       resource.data
-        ? visibleSeats(resource.data.layout, live, connection, now)
+        ? visibleSeats(
+            live.layout ?? resource.data.layout,
+            live,
+            connection,
+            now,
+          )
         : [],
     [resource.data, live, connection, now],
   )
@@ -319,7 +324,8 @@ function PlaceDetail({
   if (resource.error)
     return <ErrorNotice error={resource.error} retry={resource.reload} />
   if (!resource.data) return null
-  const { place, layout } = resource.data
+  const { place } = resource.data
+  const layout = live.layout ?? resource.data.layout
   const chosen = seats.find((s) => s.id === selected)
   const times = Object.values(live.occupancy)
     .map((r) => r.observedAt)
@@ -327,7 +333,7 @@ function PlaceDetail({
     .sort()
   const observed = times[times.length - 1]
   const online = connection === "live",
-    stale = seats.some((s) => !s.fresh)
+    stale = seats.some((s) => s.status === "unknown")
   return (
     <>
       <header className="room-header">

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node scripts/check-production.mjs",
     "check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/seats.test.ts src/layout.test.ts src/realtime.test.ts",
+    "test": "node --experimental-strip-types --test src/seats.test.ts src/layout.test.ts src/realtime.test.ts src/backend.test.ts",
     "preview": "vite preview",
     "format": "oxfmt"
   },

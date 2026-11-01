@@ -1,69 +1,50 @@
 # 빈자리 프론트엔드
 
-기존 React·Vite·Tailwind 화면을 유지한 사용자 좌석 조회 및 관리자 배치 편집 앱입니다.
-**백엔드는 변경하지 않았으며, 실제 서버 통합은 보류 상태입니다.**
-기본 실행과 배포 빌드에는 가상의 장소가 나타나지 않습니다.
-
-실제 확인한 API, 내부 모델과 서버 계약의 차이, 연결할 항목은 [INTEGRATION.md](INTEGRATION.md)에 정리했습니다.
-변경 파일, 구현 범위, 검증 결과 및 남은 제약은 [IMPLEMENTATION.md](IMPLEMENTATION.md)에 있습니다.
+React·Vite·Tailwind 화면을 FastAPI 백엔드의 `/api/v1` 계약에 연결했습니다. 기본 실행과 배포 빌드 모두 실제 API를 사용합니다. 연결 실패 시 개발 데이터로 전환하지 않습니다.
 
 ## 실행
 
-Node 22 이상. 이 폴더에서 실행합니다. Windows에서 PowerShell 실행 정책에 걸리면 `npm.cmd`를 사용하세요.
+프로젝트 루트에서 백엔드를 준비합니다(Python 3.12+, uv).
 
 ```sh
+uv sync --locked
+uv run alembic upgrade head
+uv run comsigi create-admin --username admin
+uv run comsigi serve --host 127.0.0.1 --port 8000
+```
+
+별도 터미널에서 프론트를 실행합니다(Node 22 이상).
+
+```sh
+cd frontend
 npm install
 npm run dev
 ```
 
-기본 주소는 http://localhost:8443 입니다. 기본 모드는 연결 준비 상태를 표시합니다.
-현재 백엔드의 단일 `/api/v1/seats` 응답으로 장소를 임의로 만들지 않습니다.
+Windows 실행 정책에 걸리면 `npm.cmd`를 사용하세요. http://localhost:8443 에서 접속합니다. `/api`의 HTTP와 WebSocket은 기본적으로 `http://127.0.0.1:8000`으로 프록시됩니다. 다른 백엔드를 연결하려면 Vite 실행 전 `API_PROXY_TARGET` 환경 변수를 지정합니다.
 
-## 프론트엔드 기능 검증
+관리자 화면에서 CLI로 만든 계정으로 로그인하고 공간 → 배치 → 장치 순으로 등록합니다. 기본 계정과 비밀번호는 없습니다. 관리자 토큰은 메모리에만 보관하므로 페이지를 새로고침하면 다시 로그인해야 합니다. 편집 초안은 sessionStorage에 보존됩니다.
 
-`.env.example`을 `.env.local`로 복사하고 아래 값을 설정한 뒤 개발 서버를 재시작하세요.
+장치에서 보고하기 전 좌석은 ‘확인 불가’, 장치는 ‘수신 대기’입니다. 발급한 장치 키를 사용해 루트의 `scripts/simulate_device.py` 또는 실제 하드웨어로 보고할 수 있습니다. 자세한 계약은 [API 문서](../docs/API.md)를 확인하세요.
 
-```dotenv
-VITE_ENABLE_DEV_DATA=true
-```
+## 기능
 
-또는 Windows PowerShell:
-
-```powershell
-$env:VITE_ENABLE_DEV_DATA='true'
-npm.cmd run dev
-```
-
-1. 관리자 메뉴에서 `admin` / `dev-only`로 로그인합니다.
-2. 공간을 만들고 배치 편집기에서 좌석·테이블 추가 도구를 선택한 뒤 캔버스를 클릭합니다. 키보드로는 캔버스에서 Enter를 누르면 중앙에 생성됩니다.
-3. 요소를 이동하거나 크기·회전 핸들, 오른쪽 숫자 속성으로 수정하고 배치를 저장합니다.
-4. 장치 관리에서 장치를 등록하고 담당 좌석을 지정합니다. 한 번 표시되는 개발 토큰을 복사합니다.
-5. 화면 하단 ‘개발 검증 도구’에서 장치 식별자·토큰·좌석 번호를 입력해 감지 이벤트를 보냅니다.
-6. 사용자 화면과 별도 탭에서 같은 좌석 상태를 확인합니다. 감지 정보의 개발 유효 기간은 30초입니다.
-
-개발 데이터는 브라우저 localStorage, 관리자 세션과 편집 초안은 sessionStorage에 저장됩니다.
-개발 로그인은 서버 인증이 아니며 실제 장치에 이 토큰을 설정하면 안 됩니다.
-배포 빌드에서는 환경 변수 값에 관계없이 개발 모듈이 제거됩니다. API 오류 시 개발 데이터로 전환하지 않습니다.
-기존 예시 데이터는 개발용 fixture 생성에만 사용하며 최초 실행에 자동으로 공간을 만들지 않습니다.
-
-## 화면과 동작
-
-| 경로 | 동작 |
+| 경로 | 기능 |
 | --- | --- |
-| `#/`, `#/favorites` | 공간 검색, 즐겨찾기, 로딩·오류·빈 상태 |
-| `#/places/{id}` | 좌표 기반 좌석·테이블, 세 가지 상태, 요약/이용률, 연결/감지 시각, 확대·축소·스크롤, 번호순 보기 |
-| `#/admin/login` | 로그인, 인증 실패, 만료 복구 |
-| `#/admin/places` | 공간 생성·수정·삭제 확인, 캔버스 범위 검증 |
-| `#/admin/layout/{id}` | 추가/삭제, 드래그, 크기/회전, 번호/테이블 연결, 실행 취소/다시 실행, 미리보기, 저장/충돌/초안 복원 |
-| `#/admin/devices` | 등록, 활성화, 장소/담당 좌석 연결, 중복 담당 방지, 토큰 1회 표시/재발급 |
+| `#/`, `#/favorites` | 실제 공간 목록·좌석 요약·검색·즐겨찾기 |
+| `#/places/{id}` | WebSocket 좌석 현황, 지도·번호순 보기, 연결 상태·재연결 |
+| `#/admin/login` | 관리자 Bearer 로그인·만료 처리 |
+| `#/admin/places` | 공간 생성·수정·삭제 |
+| `#/admin/layout/{id}` | 좌석·테이블 추가/삭제·번호·연결·드래그·크기·회전·저장·초안 복원 |
+| `#/admin/devices` | 장치 등록·이름·공간·활성화·키 재발급 |
 
-편집기 단축키: Delete, Escape, Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+S.
-텍스트 입력 중 삭제·실행 취소 단축키는 입력창에 맡깁니다. Ctrl+S는 현재 입력값까지 반영해 저장합니다.
-드래그 중에는 네트워크 요청을 하지 않고, 한 번의 드래그를 한 번의 실행 취소 단위로 기록합니다.
-테이블 이동은 좌석을 이동시키지 않습니다. 테이블 삭제는 연결만 해제하며 실행 취소가 가능합니다.
-배치 충돌은 초안을 유지하며 최신 배치 확인과 초안 JSON 다운로드를 제공합니다.
+장치는 소속 공간의 모든 좌석 번호를 보고할 수 있습니다. 장치별 담당 좌석 제한은 없으며 여러 장치가 같은 좌석을 보고할 수 있습니다. UI에서 실제로 저장되지 않는 담당 좌석 선택을 제공하지 않습니다.
 
-## 검증 및 빌드
+배치 위치·크기·회전은 버전을 검사하는 PUT으로 저장합니다. 추가·삭제·번호·테이블 연결·형태 변경은 백엔드의 개별 CRUD 후 PUT을 수행하므로 **전체 편집 저장이 하나의 트랜잭션은 아닙니다**. 오류가 나면 일부 반영되었을 수 있으며 초안을 유지하고 최신 배치 비교/다시 시작을 제공합니다. 동시 구조 편집은 피하세요. 상세 내용은 [INTEGRATION.md](INTEGRATION.md)에 있습니다.
+
+편집기 단축키: Delete, Escape, Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+S. 테이블 이동은 좌석을 함께 이동시키지 않으며 테이블 삭제 시 연결만 해제합니다.
+
+## 검증과 배포
 
 ```sh
 npm run check
@@ -72,20 +53,18 @@ npm run build
 npm run preview
 ```
 
-`build`는 TypeScript 검사 후 Vite 배포 빌드를 생성하고 개발 데이터/계정 코드가 제외됐는지 검사합니다. 미리보기: http://localhost:4173
-별도 서버 배포 시 hash 라우팅을 사용하므로 경로별 서버 rewrite가 필요하지 않습니다.
+Preview는 http://localhost:4173 이며 HTTP·WebSocket 프록시를 포함합니다. `build`는 타입 검사와 개발 데이터 제거 검증을 수행합니다.
 
-실제 Chrome 검증 스크립트는 `scripts/browser-check.mjs`입니다. 개발 서버(개발 데이터 활성화)와
-배포 미리보기를 함께 실행한 뒤, 설치된 taste-skill의 `scripts/lib/cdp.mjs` 파일 URL을 `CDP_MODULE`로 지정합니다.
-테스트는 새 Chrome 프로필의 개발 데이터만 생성·수정·삭제합니다. 운영 데이터나 백엔드를 호출하지 않습니다.
-결과와 화면 캡처는 `../.taste-skill/integration-qa`에 저장됩니다.
+루트에서 실행하는 다음 테스트는 임시 SQLite DB와 실제 Uvicorn 서버를 만들어 프론트 어댑터를 검증합니다. Vite 의존성이 있으면 HTTP·WebSocket 프록시와 Origin 검사도 실행합니다.
 
-## 유지한 구성
+```sh
+uv run pytest -q tests/test_frontend.py
+```
 
-React 19, Vite 8, TypeScript 5, Tailwind v4, IBM Plex Sans KR 및 기존 색상 토큰을 유지했습니다.
-기존 좌석 수 집계, 의자/범례/아이콘, 검색·즐겨찾기, 헤더와 공간 패널 스타일을 재사용합니다.
-새 상태 관리·라우팅·캔버스 라이브러리는 추가하지 않았습니다. 배치도는 접근 가능한 HTML 요소입니다.
-기존 삭제된 Figma 파일 등 작업 시작 전 변경사항은 건드리지 않았습니다.
+운영에서는 `dist`를 정적 호스팅하고 `/api`를 백엔드로 reverse proxy하세요(WebSocket Upgrade 포함). 다른 API 호스트는 빌드 시 `VITE_API_BASE_URL=https://api.example.com`으로 지정합니다. 같은 API 주소에서 WS/WSS를 도출합니다. HTTPS에서는 WSS를 사용합니다. `COMSIGI_CORS_ORIGINS`에 실제 프론트 Origin을 등록하세요. 같은 출처의 프록시라도 WebSocket Origin 검사가 적용됩니다. Vite preview는 로컬 검증용입니다.
 
-기존 `seats.ts`의 단일 API 조회/폴링 함수는 호환성을 위해 남아 있지만 새 앱에서는 사용하지 않습니다.
-새 장소 목록은 초기 조회, 수동 새로고침, 관리자 작업 후, 창으로 돌아올 때 갱신합니다.
+## 개발 시뮬레이터
+
+개발 서버에서만 `VITE_ENABLE_DEV_DATA=true`로 별도 활성화할 수 있습니다. 계정은 `admin` / `dev-only`이며 브라우저 저장소만 사용합니다. 이 모드의 장치 담당 좌석 기능은 시뮬레이터 전용으로 서버 계약과 다릅니다. 운영 빌드에서 개발 모듈·계정·fixture는 제거됩니다.
+
+기존 `scripts/browser-check.mjs`는 **시뮬레이터 전용** 브라우저 테스트입니다. 실제 백엔드 통합 근거로 사용하지 않습니다.
