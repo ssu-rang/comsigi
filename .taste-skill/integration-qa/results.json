@@ -1,0 +1,135 @@
+{
+  "results": [
+    "Production: no fictional places, no simulator, explicit integration-pending state",
+    "Admin route guard, login failure, login success and empty place list",
+    "Add, unique number validation, table linking, drag, single-step undo/redo, resize and rotate",
+    "Layout persists across page reload in the development store",
+    "Failed save retains draft; retry saves successfully",
+    "Concurrent-tab revision conflict never silently overwrites the saved layout",
+    "Expired admin session blocks editor; signing back in restores the unsaved draft",
+    "Device registration, seat assignment, one-time token disclosure and persisted settings",
+    "Simulated authenticated device updates, two viewers, disconnect masking and snapshot resynchronization",
+    "Favorites, accessible numbered seats, availability filtering and responsive user layouts",
+    "Resetting transient development readings preserves layout and returns every seat to unknown",
+    "Delete and Ctrl+Z shortcuts, Ctrl+S commits an active property field, read-only preview",
+    "Duplicate seat assignment is disabled; token rotation revokes old token; disabled device cannot send readings",
+    "Canvas shrink validation, place rename/slug edit, deletion impact confirmation, missing place state and logout",
+    "Actual browser visual QA at 1440, 768 and 390 for user, editor, devices and production login",
+    "No browser runtime exceptions"
+  ],
+  "screenshots": [
+    "../.taste-skill/integration-qa/production-user.jpg",
+    "../.taste-skill/integration-qa/editor-desktop.jpg",
+    "../.taste-skill/integration-qa/devices-desktop.jpg",
+    "../.taste-skill/integration-qa/user-desktop.jpg",
+    "../.taste-skill/integration-qa/user-768.jpg",
+    "../.taste-skill/integration-qa/user-390.jpg",
+    "../.taste-skill/integration-qa/user-320.jpg",
+    "../.taste-skill/integration-qa/places-desktop.jpg",
+    "../.taste-skill/integration-qa/places-768.jpg",
+    "../.taste-skill/integration-qa/places-390.jpg",
+    "../.taste-skill/integration-qa/final-user-1440.jpg",
+    "../.taste-skill/integration-qa/final-user-768.jpg",
+    "../.taste-skill/integration-qa/final-user-390.jpg",
+    "../.taste-skill/integration-qa/final-editor-1440.jpg",
+    "../.taste-skill/integration-qa/final-editor-768.jpg",
+    "../.taste-skill/integration-qa/final-editor-390.jpg",
+    "../.taste-skill/integration-qa/final-devices-1440.jpg",
+    "../.taste-skill/integration-qa/final-devices-768.jpg",
+    "../.taste-skill/integration-qa/final-devices-390.jpg",
+    "../.taste-skill/integration-qa/final-login-production-1440.jpg",
+    "../.taste-skill/integration-qa/final-login-production-768.jpg",
+    "../.taste-skill/integration-qa/final-login-production-390.jpg"
+  ],
+  "visualFindings": [
+    {
+      "name": "final-user",
+      "width": 1440,
+      "findings": [
+        {
+          "level": "WARN",
+          "id": "ragged-row",
+          "width": 1440,
+          "message": "1 pair(s) of cards in one row end at different heights (by 740px).",
+          "fix": "Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time."
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "name": "final-user",
+      "width": 768,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-user",
+      "width": 390,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-editor",
+      "width": 1440,
+      "findings": [
+        {
+          "level": "WARN",
+          "id": "ragged-row",
+          "width": 1440,
+          "message": "1 pair(s) of cards in one row end at different heights (by 113px).",
+          "fix": "Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time."
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "name": "final-editor",
+      "width": 768,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-editor",
+      "width": 390,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-devices",
+      "width": 1440,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-devices",
+      "width": 768,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-devices",
+      "width": 390,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-login-production",
+      "width": 1440,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-login-production",
+      "width": 768,
+      "findings": [],
+      "overflow": 0
+    },
+    {
+      "name": "final-login-production",
+      "width": 390,
+      "findings": [],
+      "overflow": 0
+    }
+  ],
+  "browserErrors": []
+}

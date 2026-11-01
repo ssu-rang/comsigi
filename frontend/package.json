@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build && node scripts/check-production.mjs",
+    "check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/seats.test.ts src/layout.test.ts src/realtime.test.ts",
     "preview": "vite preview",
     "format": "oxfmt"
   },

@@ -1,0 +1,1616 @@
+{
+ "url": "http://127.0.0.1:4173",
+ "at": "2026-11-01T11:13:19.255Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.7,
+    0.71
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1017,
+     "screens": 1.1,
+     "words": 201,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 26,
+     "sections": 1,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 30,
+     "vw": 2.1,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 77,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "lines": 1,
+     "size": 30,
+     "font": "IBM Plex Sans KR"
+    },
+    "headings": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "IBM Plex Sans KR",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 1.35,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.15,
+      "top": 77,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "18",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 36,
+      "vw": 2.5,
+      "font": "IBM Plex Sans KR",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1.25,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.03,
+      "top": 332,
+      "tag": "b",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans KR",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      11,
+      13,
+      14,
+      15,
+      22,
+      24,
+      30,
+      36
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 36,
+      "vw": 2.5,
+      "font": "IBM Plex Sans KR",
+      "text": "18"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.25,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "이용 가능한 좌석",
+      "above": "18",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 309
+     }
+    ],
+    "numbered": [
+     {
+      "text": "01",
+      "size": 13,
+      "top": 521
+     },
+     {
+      "text": "02",
+      "size": 13,
+      "top": 521
+     },
+     {
+      "text": "03",
+      "size": 13,
+      "top": 521
+     },
+     {
+      "text": "04",
+      "size": 13,
+      "top": 521
+     },
+     {
+      "text": "05",
+      "size": 13,
+      "top": 596
+     },
+     {
+      "text": "06",
+      "size": 13,
+      "top": 596
+     },
+     {
+      "text": "07",
+      "size": 13,
+      "top": 596
+     },
+     {
+      "text": "08",
+      "size": 13,
+      "top": 596
+     },
+     {
+      "text": "09",
+      "size": 13,
+      "top": 521
+     }
+    ],
+    "color": {
+     "bodyBg": "#f5f6f4",
+     "bodyBgHsl": {
+      "h": 90,
+      "s": 0.1,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 171,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#697166",
+       "share": 0.42
+      },
+      {
+       "color": "#60675e",
+       "share": 0.24
+      },
+      {
+       "color": "#252c24",
+       "share": 0.15
+      },
+      {
+       "color": "#5b6457",
+       "share": 0.1
+      },
+      {
+       "color": "#267349",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#293327",
+      "hsl": {
+       "h": 110,
+       "s": 0.13,
+       "l": 0.18
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 6,
+     "height": 45,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "좌석 현황으로 바로가기",
+      "전체 공간"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 4,
+     "hairlineSamples": [
+      "header.site-header 1440px",
+      "div.campus-total 270px",
+      "div.seat-summary 854px",
+      "div.room-facts 910px"
+     ],
+     "outlinedBoxes": 4,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 6,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 5,
+       "iconTopped": false,
+       "rounded": true,
+       "top": 330
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 1,
+     "fixed": false,
+     "height": 49,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex sans kr"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1017,
+    "margins": {
+     "left": 125,
+     "right": 145
+    },
+    "sections": [],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "size": 30,
+      "top": 77,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 116,
+      "n": 1
+     },
+     {
+      "x": 137,
+      "n": 1
+     },
+     {
+      "x": 441,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 16,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0.08,
+    "voidBox": {
+     "x": 600,
+     "y": 120,
+     "w": 540,
+     "h": 180
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": false,
+    "ground": "#f5f6f4",
+    "sidebar": null,
+    "topbar": {
+     "h": 49
+    },
+    "canvas": {
+     "left": 116,
+     "right": 145
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 30,
+     "vw": 2.1,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 77,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 2,
+     "firstScreen": 2,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 6,
+     "radii": [
+      [
+       8,
+       2
+      ],
+      [
+       6,
+       2
+      ],
+      [
+       0,
+       2
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 53,
+     "tabularShare": 1,
+     "kpiMax": 36
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      13,
+      14,
+      15,
+      20,
+      22,
+      24,
+      30,
+      36
+     ]
+    },
+    "title": {
+     "text": "캠퍼스의 빈자리",
+     "size": 30,
+     "top": 77
+    },
+    "colourShare": 0
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.88,
+    0.84
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1093,
+     "screens": 1.1,
+     "words": 143,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 26,
+     "sections": 1,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 30,
+     "vw": 3.9,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 77,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "lines": 1,
+     "size": 30,
+     "font": "IBM Plex Sans KR"
+    },
+    "headings": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "IBM Plex Sans KR",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 1.35,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.28,
+      "top": 77,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "18",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 36,
+      "vw": 4.7,
+      "font": "IBM Plex Sans KR",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1.25,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.05,
+      "top": 398,
+      "tag": "b",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans KR",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      11,
+      13,
+      14,
+      22,
+      24,
+      30,
+      36
+     ],
+     "sizeCount": 7,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 36,
+      "vw": 4.7,
+      "font": "IBM Plex Sans KR",
+      "text": "18"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.33,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "이용 가능한 좌석",
+      "above": "18",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 375
+     }
+    ],
+    "numbered": [
+     {
+      "text": "01",
+      "size": 13,
+      "top": 590
+     },
+     {
+      "text": "02",
+      "size": 13,
+      "top": 590
+     },
+     {
+      "text": "03",
+      "size": 13,
+      "top": 590
+     },
+     {
+      "text": "04",
+      "size": 13,
+      "top": 590
+     },
+     {
+      "text": "05",
+      "size": 13,
+      "top": 671
+     },
+     {
+      "text": "06",
+      "size": 13,
+      "top": 671
+     },
+     {
+      "text": "07",
+      "size": 13,
+      "top": 671
+     },
+     {
+      "text": "08",
+      "size": 13,
+      "top": 671
+     },
+     {
+      "text": "09",
+      "size": 13,
+      "top": 590
+     }
+    ],
+    "color": {
+     "bodyBg": "#f5f6f4",
+     "bodyBgHsl": {
+      "h": 90,
+      "s": 0.1,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 235,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#fafbf9",
+       "top": 520,
+       "hsl": {
+        "h": 90,
+        "s": 0.2,
+        "l": 0.98
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#697166",
+       "share": 0.31
+      },
+      {
+       "color": "#60675e",
+       "share": 0.3
+      },
+      {
+       "color": "#252c24",
+       "share": 0.14
+      },
+      {
+       "color": "#5b6457",
+       "share": 0.14
+      },
+      {
+       "color": "#267349",
+       "share": 0.09
+      }
+     ],
+     "button": {
+      "bg": "#293327",
+      "hsl": {
+       "h": 110,
+       "s": 0.13,
+       "l": 0.18
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 6,
+     "height": 45,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "좌석 현황으로 바로가기",
+      "중앙도서관 · 제1열람실 공간 변경"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 3,
+     "hairlineSamples": [
+      "header.site-header 768px",
+      "div.seat-summary 654px",
+      "div.room-facts 702px"
+     ],
+     "outlinedBoxes": 2,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 2,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 1,
+     "fixed": false,
+     "height": 49,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex sans kr"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1093,
+    "margins": {
+     "left": 54,
+     "right": 32
+    },
+    "sections": [
+     {
+      "sel": "header.room-header",
+      "tag": "header",
+      "top": 236,
+      "height": 122,
+      "words": 10,
+      "media": 0,
+      "middle": 433,
+      "heading": {
+       "text": "제1열람실",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 57,
+      "right": 57,
+      "textLeft": 57,
+      "textRight": 57,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.floorplan",
+      "tag": "div",
+      "top": 520,
+      "height": 395,
+      "words": 57,
+      "media": 0,
+      "middle": 28,
+      "heading": null,
+      "left": 82,
+      "right": 82,
+      "textLeft": 96,
+      "textRight": 82,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "size": 30,
+      "top": 77,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 32,
+      "n": 1
+     },
+     {
+      "x": 57,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 2,
+    "bodySize": 16,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": false,
+    "ground": "#f5f6f4",
+    "sidebar": null,
+    "topbar": {
+     "h": 49
+    },
+    "canvas": {
+     "left": 32,
+     "right": 32
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 30,
+     "vw": 3.9,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 77,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 1,
+     "firstScreen": 1,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 3,
+     "radii": [
+      [
+       8,
+       1
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       6,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 49,
+     "tabularShare": 1,
+     "kpiMax": 36
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      13,
+      14,
+      15,
+      20,
+      22,
+      24,
+      30,
+      36
+     ]
+    },
+    "title": {
+     "text": "캠퍼스의 빈자리",
+     "size": 30,
+     "top": 77
+    },
+    "colourShare": 0
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.86,
+    0.9
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 1395,
+     "screens": 1.7,
+     "words": 128,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 26,
+     "sections": 1,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 81,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "lines": 1,
+     "size": 24,
+     "font": "IBM Plex Sans KR"
+    },
+    "headings": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "IBM Plex Sans KR",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 1.35,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.52,
+      "top": 81,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "제1열람실",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans KR",
+      "weight": 600,
+      "tracking": -0.04,
+      "leading": 1.35,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.22,
+      "top": 272,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "18",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "IBM Plex Sans KR",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1.25,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.09,
+      "top": 390,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "28석",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 23,
+      "vw": 5.9,
+      "font": "IBM Plex Sans KR",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.19,
+      "top": 394,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "2석",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 23,
+      "vw": 5.9,
+      "font": "IBM Plex Sans KR",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.19,
+      "top": 394,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 2,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans KR",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      20,
+      22,
+      23,
+      24,
+      32
+     ],
+     "sizeCount": 9,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 32,
+      "vw": 8.2,
+      "font": "IBM Plex Sans KR",
+      "text": "18"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.35,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "이용 가능한 좌석",
+      "above": "18",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 367
+     }
+    ],
+    "numbered": [
+     {
+      "text": "01",
+      "size": 13,
+      "top": 575
+     },
+     {
+      "text": "02",
+      "size": 13,
+      "top": 619
+     },
+     {
+      "text": "03",
+      "size": 13,
+      "top": 663
+     },
+     {
+      "text": "04",
+      "size": 13,
+      "top": 707
+     },
+     {
+      "text": "05",
+      "size": 13,
+      "top": 575
+     },
+     {
+      "text": "06",
+      "size": 13,
+      "top": 619
+     },
+     {
+      "text": "07",
+      "size": 13,
+      "top": 663
+     },
+     {
+      "text": "08",
+      "size": 13,
+      "top": 707
+     },
+     {
+      "text": "09",
+      "size": 13,
+      "top": 575
+     }
+    ],
+    "color": {
+     "bodyBg": "#f5f6f4",
+     "bodyBgHsl": {
+      "h": 90,
+      "s": 0.1,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 223,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#fafbf9",
+       "top": 507,
+       "hsl": {
+        "h": 90,
+        "s": 0.2,
+        "l": 0.98
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#60675e",
+       "share": 0.31
+      },
+      {
+       "color": "#697166",
+       "share": 0.25
+      },
+      {
+       "color": "#252c24",
+       "share": 0.15
+      },
+      {
+       "color": "#5b6457",
+       "share": 0.15
+      },
+      {
+       "color": "#267349",
+       "share": 0.1
+      }
+     ],
+     "button": {
+      "bg": "#293327",
+      "hsl": {
+       "h": 110,
+       "s": 0.13,
+       "l": 0.18
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 6,
+     "height": 45,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "좌석 현황으로 바로가기",
+      "중앙도서관 · 제1열람실 공간 변경"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 3,
+     "hairlineSamples": [
+      "header.site-header 390px",
+      "div.seat-summary 324px",
+      "div.room-facts 356px"
+     ],
+     "outlinedBoxes": 2,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 2,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 1,
+     "fixed": false,
+     "height": 57,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex sans kr"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 1395,
+    "margins": {
+     "left": 33,
+     "right": 33
+    },
+    "sections": [
+     {
+      "sel": "header.room-header",
+      "tag": "header",
+      "top": 224,
+      "height": 126,
+      "words": 10,
+      "media": 0,
+      "middle": 103,
+      "heading": {
+       "text": "제1열람실",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 33,
+      "right": 33,
+      "textLeft": 33,
+      "textRight": 33,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.floorplan",
+      "tag": "div",
+      "top": 507,
+      "height": 689,
+      "words": 52,
+      "media": 0,
+      "middle": 28,
+      "heading": null,
+      "left": 60,
+      "right": 50,
+      "textLeft": 73,
+      "textRight": 50,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "캠퍼스의 빈자리",
+      "size": 24,
+      "top": 81,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 1
+     },
+     {
+      "x": 33,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 2,
+    "bodySize": 16,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": false,
+    "ground": "#f5f6f4",
+    "sidebar": null,
+    "topbar": {
+     "h": 57
+    },
+    "canvas": {
+     "left": 16,
+     "right": 22
+    },
+    "hero": {
+     "text": "캠퍼스의 빈자리",
+     "words": 2,
+     "chars": 8,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "IBM Plex Sans KR",
+     "weight": 600,
+     "tracking": -0.05,
+     "leading": 1.35,
+     "top": 81,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 1,
+     "firstScreen": 1,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 4,
+     "radii": [
+      [
+       0,
+       2
+      ],
+      [
+       8,
+       1
+      ],
+      [
+       6,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 49,
+     "tabularShare": 1,
+     "kpiMax": 32
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      13,
+      14,
+      15,
+      20,
+      22,
+      23,
+      24,
+      32
+     ]
+    },
+    "title": {
+     "text": "캠퍼스의 빈자리",
+     "size": 24,
+     "top": 81
+    },
+    "colourShare": 0
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\thoor\\orca\\workspaces\\comsigi\\taste-skill-test\\.taste-skill\\integration-before\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}
