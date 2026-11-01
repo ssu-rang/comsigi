@@ -41,8 +41,31 @@ coverage.xml
 *.sqlite3
 *.db-wal
 *.db-shm
+*.db-journal
 *.sqlite-wal
 *.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+
+# Frontend dependencies, caches, and local files
+/frontend/**/node_modules/
+/frontend/**/.cache/
+/frontend/**/.env*
+!/frontend/**/.env.example
+/frontend/**/.vite/
+/frontend/**/vite.config.*.timestamp-*
+/frontend/**/*.tsbuildinfo
+/frontend/**/*-debug.log*
+/frontend/**/logs/
+/frontend/**/.claude-replay.*
+/frontend/**/.tmp-*
+
+# Figma Make generated context and platform-managed state
+/frontend/.figma/design-context/
+/frontend/.plugins/
+/frontend/.opencode-skills/
 
 # Editors and operating systems
 .idea/
