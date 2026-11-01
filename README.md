@@ -27,26 +27,30 @@ uv run comsigi serve --host 0.0.0.0 --port 8000
 
 ## Railway 배포
 
-루트의 [railway.toml](railway.toml)에 빌드와 시작 명령이 들어 있습니다. Railway가 배포할 때 DB 마이그레이션 → 관리자 계정 최초 생성 → 서버 실행을 자동으로 처리하므로 터미널에 명령을 입력할 필요가 없습니다. 관리자 이름은 `admin`이며, 기존 계정의 비밀번호는 그대로 유지합니다.
+루트의 [railway.toml](railway.toml)에 빌드와 시작 명령이 들어 있습니다. [railpack.json](railpack.json)은 Python 빌드에 Node.js 22를 추가합니다. Railway가 배포할 때 백엔드 의존성 설치 → 프론트엔드 의존성 설치·운영 빌드 → DB 마이그레이션 → 관리자 계정 최초 생성 → 서버 실행을 자동으로 처리하므로 터미널에 명령을 입력할 필요가 없습니다. 관리자 이름은 `admin`이며, 기존 계정의 비밀번호는 그대로 유지합니다.
+
+배포한 Railway 도메인의 `/`에서 웹 화면, `/#/admin/login`에서 관리자 로그인, `/api/v1/*`에서 API·WebSocket을 제공합니다. 프론트엔드를 별도 서비스에 올릴 필요가 없습니다. Railway 빌드는 `VITE_API_BASE_URL`을 비워서 화면과 API가 같은 주소를 사용하게 합니다.
 
 Railway 화면에서 최초 한 번 설정합니다.
 
-1. GitHub 저장소를 백엔드 서비스에 연결합니다. 서비스의 Root Directory는 프로젝트 루트(`/`)로 두고, Config File은 `/railway.toml`을 사용합니다.
+1. GitHub 저장소를 서비스에 연결합니다. 서비스의 Root Directory는 프로젝트 루트(`/`)로 두고, Config File은 `/railway.toml`을 사용합니다.
 2. 서비스에 Volume을 연결하고 Mount Path를 `/data`로 지정합니다.
 3. 서비스의 Variables에 아래 값을 등록합니다.
-4. Settings → Networking에서 Generate Domain으로 API 주소를 만들고 배포합니다. Build/Start Command는 파일에서 적용되므로 직접 입력하지 않습니다. Pre-deploy Command는 비워 둡니다.
+4. Settings → Networking에서 Generate Domain으로 사이트 주소를 만들고 배포합니다. Build/Start Command는 파일에서 적용되므로 직접 입력하지 않습니다. Pre-deploy Command는 비워 둡니다.
 
 | 환경 변수 | 값 |
 | --- | --- |
 | `COMSIGI_ADMIN_PASSWORD` | 직접 정한 12–1024자 비밀번호 |
 | `COMSIGI_DATABASE_URL` | `sqlite+aiosqlite:////data/comsigi.db` |
-| `COMSIGI_CORS_ORIGINS` | `["https://실제-프론트엔드-도메인"]` |
+| `COMSIGI_CORS_ORIGINS` | `["https://실제-Railway-도메인"]` |
 
-`COMSIGI_CORS_ORIGINS`에는 프론트엔드 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 프론트엔드는 [frontend/README.md](frontend/README.md#검증과-배포)에 따라 별도로 배포하고 API 주소를 연결합니다. 루트 설정은 백엔드 서비스용입니다.
+`COMSIGI_CORS_ORIGINS`에는 접속할 Railway 또는 커스텀 도메인의 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 같은 주소에서 제공하더라도 WebSocket Origin 검사에 필요합니다. 예전에 별도 프론트엔드 주소를 설정했다면 현재 사이트 주소로 변경합니다.
 
 Volume은 관리자 계정·공간·배치·장치 설정을 재배포 후에도 유지합니다. DB 초기화가 실패하면 서버를 시작하지 않으며, Railway는 `/api/v1/ready`가 성공한 뒤 배포를 활성화합니다. 시작 명령은 Railway가 제공한 `PORT`를 사용하고, 서버는 단일 프로세스·replica 1개로 실행됩니다.
 
 Railway의 [설정 파일](https://docs.railway.com/config-as-code), [Volume](https://docs.railway.com/volumes), [시작 명령](https://docs.railway.com/deployments/start-command) 문서를 참고하세요. Volume은 Pre-deploy Command 컨테이너에 연결되지 않으므로 SQLite 초기화를 그곳으로 옮기지 않습니다.
+
+로컬에서 운영 화면을 확인하려면 `frontend` 폴더에서 `npm ci --include=dev`와 `npm run build`를 실행한 다음 백엔드를 시작합니다. 빌드 결과 `frontend/dist`가 있으면 백엔드가 자동으로 제공하며, 빌드 결과가 없으면 API만 제공합니다. 별도 빌드 경로는 `COMSIGI_FRONTEND_DIST`로 지정할 수 있습니다. 화면은 해시 라우팅을 사용하므로 관리자 페이지도 `/admin/login` 대신 `/#/admin/login`으로 접속합니다.
 
 ### 직접 서버를 실행할 때
 

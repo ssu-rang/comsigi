@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -8,6 +10,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "sqlite+aiosqlite:///./comsigi.db"
+    frontend_dist: Path = Path(__file__).resolve().parents[1] / "frontend" / "dist"
     cors_origins: list[str] = [
         f"http://{host}:{port}"
         for host in ("localhost", "127.0.0.1")

@@ -61,7 +61,9 @@ Preview는 http://localhost:4173 이며 HTTP·WebSocket 프록시를 포함합�
 uv run pytest -q tests/test_frontend.py
 ```
 
-운영에서는 `dist`를 정적 호스팅하고 `/api`를 백엔드로 reverse proxy하세요(WebSocket Upgrade 포함). 다른 API 호스트는 빌드 시 `VITE_API_BASE_URL=https://api.example.com`으로 지정합니다. 같은 API 주소에서 WS/WSS를 도출합니다. HTTPS에서는 WSS를 사용합니다. `COMSIGI_CORS_ORIGINS`에 실제 프론트 Origin을 등록하세요. 같은 출처의 프록시라도 WebSocket Origin 검사가 적용됩니다. Vite preview는 로컬 검증용입니다.
+Railway에서는 루트의 `railway.toml`과 `railpack.json`으로 프론트엔드와 백엔드를 함께 빌드·배포합니다. Vite 빌드 결과 `frontend/dist`를 FastAPI가 `/`에서 제공하고 API·WebSocket도 같은 도메인을 사용합니다. 관리자 로그인은 `/#/admin/login`입니다. Railway 빌드는 `VITE_API_BASE_URL`을 비우며, `COMSIGI_CORS_ORIGINS`에는 현재 Railway/커스텀 도메인의 HTTPS Origin을 등록합니다. 별도 프론트엔드 서비스나 reverse proxy 설정은 필요하지 않습니다. 전체 설정은 [루트 README](../README.md#railway-배포)를 확인하세요.
+
+다른 환경에 프론트엔드를 별도로 배포할 때는 `dist`를 정적 호스팅하고 `/api`를 백엔드로 reverse proxy하세요(WebSocket Upgrade 포함). 다른 API 호스트는 빌드 시 `VITE_API_BASE_URL=https://api.example.com`으로 지정합니다. 같은 API 주소에서 WS/WSS를 도출합니다. HTTPS에서는 WSS를 사용합니다. `COMSIGI_CORS_ORIGINS`에 실제 프론트 Origin을 등록하세요. Vite preview는 로컬 검증용입니다.
 
 ## 개발 시뮬레이터
 

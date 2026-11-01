@@ -1,5 +1,6 @@
 [build]
 builder = "RAILPACK"
+buildCommand = "uv sync --locked --no-dev && cd frontend && npm ci --include=dev && VITE_API_BASE_URL= npm run build"
 
 [deploy]
 # SQLite volumes are available at startup, not in Railway's pre-deploy container.

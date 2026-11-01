@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -113,6 +114,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     for router in (api_router, auth.router, admin.router, hardware.router):
         app.include_router(router, prefix="/api/v1")
+    if (settings.frontend_dist / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend")
     return app
 
 
