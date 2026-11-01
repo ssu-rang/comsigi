@@ -1,67 +1,137 @@
-# Comsigi Backend
+# Comsigi — 실시간 좌석 점유 백엔드
 
-FastAPI 기반 백엔드입니다. Python 3.11 이상이 필요합니다.
+Python 3.12+, FastAPI, SQLAlchemy 2.x, SQLite, Alembic, Uvicorn으로 구현한 단일 프로세스 서버입니다. OpenMV 또는 Arduino가 분석한 **장치 UID·좌석 번호·점유 여부**를 HTTP로 받고, 장소별 상태를 메모리에 관리하며 WebSocket으로 변경 사항을 전송합니다. 이미지 분석이나 영상 수신, 점유 이력 저장은 하지 않습니다.
 
-## 설치
+## 실행
 
-프로젝트 루트에서 실행합니다.
+프로젝트 루트에서 실행합니다. [uv 설치 안내](https://docs.astral.sh/uv/getting-started/installation/)에 따라 uv를 설치하세요. `uv` 명령을 찾지 못하면 `python -m pip install uv` 이후 아래 명령의 `uv`를 `python -m uv`로 바꿀 수 있습니다.
+
+```shell
+uv sync --locked
+uv run alembic upgrade head
+uv run comsigi create-admin --username admin
+uv run comsigi serve --host 0.0.0.0 --port 8000
+```
+
+관리자 비밀번호는 터미널에서 숨김 입력하며 최소 12자입니다. 기본 계정·기본 비밀번호는 없습니다. `.python-version`은 재현 가능한 개발 환경을 위해 Python 3.12를 지정합니다.
+
+설정을 변경하려면 `.env.example`을 `.env`로 복사하여 수정합니다. 기본 설정만 쓸 때는 복사하지 않아도 됩니다. `.env`는 자동으로 읽고 실제 환경 변수가 우선합니다. SQLite 경로는 **실행 디렉터리 기준**입니다. 운영 환경에서는 절대 경로를 사용하세요.
+
+- API 문서: `http://127.0.0.1:8000/docs`
+- OpenAPI: `http://127.0.0.1:8000/openapi.json`
+- 프로세스 확인: `GET /api/v1/health`
+- DB·만료 작업 확인: `GET /api/v1/ready`
+- 전체 연동 계약: [docs/API.md](docs/API.md)
+
+개발 시 `uv run comsigi serve --reload`를 사용합니다. reload도 서버 재시작이므로 점유 상태·장치 세션·관리자 로그인 세션이 초기화됩니다. 비밀번호 변경은 `uv run comsigi set-password --username admin`이며, 기존 로그인 토큰은 다음 요청부터 거부됩니다.
+
+## 구현 범위
+
+| 영역 | 제공 기능 |
+| --- | --- |
+| 관리자 | 로그인·로그아웃·만료, 장소/좌석/테이블/장치 CRUD, 장치 키 발급·교체·비활성화 |
+| 배치 | 위치·크기·회전·테이블 연결, 캔버스 크기, 전체 배치의 원자적 저장, 버전 충돌 검사 |
+| 하드웨어 | Bearer 장치 인증, 장소 자동 결정, 세션·시퀀스 검증, 최대 500개 좌석 일괄 수신, heartbeat |
+| 상태 | `available / occupied / unknown`, 통신 만료, 좌석별 데이터 만료, 여러 장치의 보고 결합 |
+| WebSocket | 최초 스냅샷, 변경 이벤트, 배치 변경, 장소 삭제, ping/pong, 느린 소비자 연결 종료 |
+| 운영 | 마이그레이션 검사, CORS·WS Origin 제한, 준비 상태 검사, 로그인 속도 제한, 단일 프로세스 실행 명령 |
+
+공개 조회 API와 WebSocket에는 인증이 필요하지 않습니다. 관리자 API는 관리자 토큰, 하드웨어 API는 해당 장치 키만 받습니다. 장치 키는 생성·교체 응답에서 한 번만 제공됩니다.
+
+## 데이터와 동작 원칙
+
+SQLite에는 장소, 좌석, 테이블, 배치, 장치 연결·인증 해시, 관리자 인증 해시만 저장합니다. `layout_version`은 배치 편집 충돌을 감지하는 영구 설정 버전입니다. 장치 키는 256비트 무작위 값을 SHA-256으로 해시하고, 관리자 비밀번호는 Argon2id로 해시합니다.
+
+점유 상태, 수신 시각, 장치 온라인 상태, 마지막 순서 번호, 장치 세션, WebSocket 연결, 관리자 로그인 세션은 메모리에만 존재합니다. **하드웨어 보고 처리 경로는 DB SELECT/INSERT/UPDATE를 실행하지 않습니다.** 서버 재시작 후 모든 좌석은 `unknown`, 모든 활성 장치는 `offline`에서 시작합니다.
+
+기본적으로 장치가 30초 동안 새 메시지를 보내지 않으면 offline이며, 좌석도 마지막 보고 후 30초가 지나면 unknown입니다. 만료 검사는 1초마다 실행됩니다. heartbeat는 장치 연결만 유지하므로, 상태가 바뀌지 않은 좌석도 10초 정도 간격으로 다시 보고해야 합니다. unknown은 빈 좌석 수에 포함하지 않습니다.
+
+여러 장치가 같은 좌석을 보고하면 **온라인 장치의 만료되지 않은 보고 중 하나라도 occupied이면 occupied**, 모두 비점유이면 available, 유효한 보고가 없으면 unknown입니다. 장치별 담당 좌석 ACL은 없으며 해당 장소의 모든 좌석을 보고할 수 있습니다.
+
+좌석 생성·삭제·번호 변경은 해당 장소의 장치 세션과 관측값을 초기화합니다. 장치는 `409 session_required`를 받으면 새 세션을 열고 현재 감지 결과를 전송해야 합니다. 이는 배치 변경 전 지연 패킷이 새 번호 매핑에 적용되는 것을 막습니다. 단순한 이동·크기·라벨 변경에는 점유 상태가 유지됩니다. 장치 이동·비활성화·키 교체·삭제도 해당 장치의 관측값과 세션을 제거합니다.
+
+장소 삭제 시 좌석·테이블·장치를 함께 삭제합니다. 테이블만 삭제하면 좌석은 유지하고 `table_id`만 null로 변경합니다. 삭제된 내부 ID는 재사용하지 않습니다. 다른 장소의 테이블에 좌석을 연결할 수 없습니다.
+
+## 프론트엔드 연결
+
+`GET /api/v1/places`로 장소를 선택하고 `/api/v1/places/{slug}/ws`에 연결합니다. 첫 `snapshot` 이벤트에 배치와 상태가 함께 있으므로 `seat.id`로 결합해 그리면 됩니다. 이후 `state_changed`는 일부 변경 항목, `layout_changed`는 전체 배치와 전체 상태를 담습니다. 재연결 시 새 스냅샷으로 교체합니다. 상세한 순서·연결 복구 규칙과 JavaScript 예제는 [API 문서](docs/API.md#websocket)를 참고하세요.
+
+기존 저장소 프론트엔드의 `GET /api/v1/seats`는 유지합니다. 장소가 하나이면 그 장소의 좌석을 반환하고, 여러 장소이면 `?place_slug=library`를 지정해야 합니다. 이 호환 경로의 `id`는 내부 ID이며 좌석 표시 번호가 아닙니다. 새 프론트엔드는 장소별 계약을 사용하세요. 프론트엔드 코드는 이번 구현에서 변경하지 않았습니다.
+
+## 하드웨어 없이 연동 검증
+
+Swagger에서 로그인하고 장소·좌석·장치를 생성한 후, 발급된 키를 환경 변수로 설정합니다. 시뮬레이터는 실제 서버의 인증·세션·HTTP 계약을 그대로 사용하며, 입력한 좌석들의 점유 여부를 주기적으로 바꿉니다.
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e .
+$env:COMSIGI_DEVICE_CREDENTIAL = "발급받은 장치 키"
+uv run python scripts/simulate_device.py --device-uid camera-1 --seats 1 2 --interval 10
 ```
 
-macOS / Linux:
+macOS/Linux에서는 `export COMSIGI_DEVICE_CREDENTIAL='발급받은 장치 키'`로 설정합니다. 키를 명령행 인자로 전달하거나 커밋하지 않습니다. 실제 OpenMV 네트워크 모델/Arduino Ethernet·Wi-Fi 라이브러리의 선택은 펌웨어 측에서 하되 JSON과 Bearer 헤더는 동일하게 사용합니다.
 
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
-```
-
-## 개발 서버 실행
-
-Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
-```
-
-macOS / Linux:
-
-```bash
-.venv/bin/python -m uvicorn app.main:app --reload
-```
-
-- Swagger UI: http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
-- 헬스체크: http://127.0.0.1:8000/api/v1/health → `{"status":"ok"}`
-- 좌석 조회: http://127.0.0.1:8000/api/v1/seats → `{"seats":[]}` (데이터 연동 전)
-
-`--reload`는 개발 환경에서만 사용합니다.
-
-## 구조
+## 구성
 
 ```text
 app/
-  main.py         # FastAPI 앱 생성 및 라우터 등록
+  main.py          앱 팩토리, lifespan, 오류 응답, CORS
+  config.py        환경 설정
+  db.py            비동기 SQLite 세션, 외래 키/WAL
+  models.py        영구 데이터 모델
+  schemas.py       HTTP 입출력 검증
+  security.py      관리자 세션, 비밀번호·장치 키 검증
+  realtime.py      메모리 상태, 순서·만료 처리, 구독 큐
+  cli.py           관리자 생성·비밀번호 변경, 단일 프로세스 실행
   api/
-    router.py     # /api/v1 라우터
-pyproject.toml    # 패키지 설정 및 의존성
+    admin.py       관리 CRUD와 원자적 배치 저장
+    auth.py        관리자 로그인·로그아웃
+    hardware.py    HTTP를 상태 처리기에 연결
+    router.py      공개 조회, WebSocket, 상태 검사, 호환 API
+alembic/           초기 스키마와 이후 마이그레이션
+tests/             API·DB·WebSocket·실제 TCP 통합 테스트
+scripts/           HTTP 장치 시뮬레이터
+docs/API.md        하드웨어와 프론트엔드 계약
 ```
 
-로컬 환경 변수는 `.env`에 보관합니다. `.env`와 가상환경, 캐시,
-빌드 산출물은 Git에서 제외됩니다. 환경 변수 자동 로딩은 별도로 설정해야 합니다.
+단순 CRUD는 라우트에서 SQLAlchemy를 직접 사용합니다. `Runtime.ingest()`는 HTTP/소켓 객체를 받지 않으므로 나중에 다른 수신 방식에서도 재사용할 수 있습니다. 상태·구독·설정 변경은 하나의 `asyncio.Lock`으로 순서를 보장하고, 네트워크 송신은 연결별 제한된 큐에서 별도로 수행합니다. DB 변경은 후보 설정을 검증한 뒤 커밋하고, I/O 없이 메모리에 적용하므로 실패한 저장이 실시간 상태에 먼저 반영되지 않습니다.
 
-## 프런트엔드 좌석 데이터
+추가 라이브러리는 다음 용도로만 사용합니다.
 
-프런트엔드에는 사용자 좌석 조회, 관리자 공간·배치 편집 및 장치 관리 화면이 있습니다.
-백엔드 코드는 수정하지 않았으며 실제 통합은 보류 상태입니다. 기본 실행과 운영 빌드는
-가상의 장소를 표시하지 않고 연결 준비 상태를 안내합니다.
+| 라이브러리 | 도입 근거 |
+| --- | --- |
+| aiosqlite + SQLAlchemy asyncio extra | SQLite 작업으로 WebSocket 이벤트 루프가 막히지 않도록 함 |
+| pydantic-settings | 환경 변수·`.env`를 타입 검증과 함께 읽음 |
+| pwdlib[argon2] | 관리자 비밀번호용 표준 Argon2id 구현 사용 |
+| uvicorn[standard] | WebSocket 전송 및 개발 reload 지원 |
+| Ruff (개발) | 정적 오류·스타일 검사와 포맷 통일 |
 
-개발 서버에서 `VITE_ENABLE_DEV_DATA=true`를 명시한 경우에만 브라우저 저장소 기반
-시뮬레이터를 사용할 수 있습니다. 기존 `VITE_SEATS_API_URL`은 새 화면의 연결 설정으로
-사용하지 않습니다. 실행 방법은 [프런트엔드 안내](frontend/README.md), 변경 및 검증 결과는
-[구현 보고서](frontend/IMPLEMENTATION.md)를 참고하세요.
+## 테스트와 스키마 변경
 
-현재 `/api/v1/seats`는 센서 및 DB 연동 전까지 빈 목록을 반환합니다. 장소·배치·인증·장치·
-WebSocket 계약이 추가된 후 연결할 항목은 [통합 안내](frontend/INTEGRATION.md)에 정리했습니다.
+```shell
+uv run pytest -q
+uv run ruff check app tests scripts alembic
+uv run ruff format --check app tests scripts alembic
+uv run alembic check
+```
+
+각 테스트는 임시 SQLite DB에 **실제 Alembic 마이그레이션**을 실행합니다. 수신 경로의 SQL 미실행, 동시 순서 처리, 잘못된 배치의 롤백, 재시작, 인증·키 교체, 만료, 재연결, 장소 격리, 실제 Uvicorn TCP HTTP→WebSocket 전달을 검증합니다.
+
+Windows 사용자 공용 임시 폴더의 접근 권한 때문에 pytest가 시작되지 않을 때만 작업 공간에 임시 폴더를 지정하세요. 매 실행마다 새 경로를 사용하면 기존 디렉터리를 지울 필요가 없습니다.
+
+```powershell
+New-Item -ItemType Directory -Force .test-tmp | Out-Null
+uv run pytest -q --basetemp=".test-tmp/run-$([guid]::NewGuid().ToString('N'))"
+```
+
+새 모델 변경은 `uv run alembic revision --autogenerate -m "설명"`으로 만들고 검토합니다. `app/main.py`의 `SCHEMA_REVISION`을 새 head로 갱신하고 마이그레이션 테스트를 실행합니다. 서버는 미적용/불일치 스키마에서 시작하지 않습니다. SQLite batch migration이 필요한 변경은 서버를 중지하고 백업한 뒤 적용하세요.
+
+## 운영
+
+- **Uvicorn worker는 반드시 1개**, 서버 replica도 1개입니다. 별도 프로세스·다중 컨테이너 간 메모리를 공유하지 않으며 다중 실행을 자동으로 막지는 않습니다. 제공한 `comsigi serve`는 workers=1로 실행합니다.
+- 운영에서는 HTTPS/WSS를 제공하는 역방향 프록시 뒤에서 실행하고 WebSocket Upgrade를 전달합니다. 프록시의 유휴 제한은 heartbeat보다 길게, 요청 본문 제한은 예를 들어 1 MiB로 설정합니다. `--reload`는 사용하지 않습니다.
+- `COMSIGI_CORS_ORIGINS`에 실제 프론트엔드 Origin(프로토콜·호스트·포트)을 명시합니다. 같은 도메인에서 제공해도 브라우저 WebSocket Origin을 등록해야 합니다. `*`는 허용하지 않습니다. Origin 없는 비브라우저 WebSocket 클라이언트는 허용합니다.
+- 프록시에서 전달하는 IP는 신뢰할 프록시만 설정합니다. 로그인은 클라이언트 IP당 60초에 10회로 제한되며, 프록시 설정이 없으면 프록시 IP를 공유합니다. 관리자 토큰 수와 WS 연결 수에도 상한이 있습니다.
+- SQLite 파일이 있는 디렉터리에 쓰기 권한을 부여하고 영구 볼륨을 사용합니다. WAL 모드의 실행 중 DB를 `.db` 파일만 복사해 백업하지 말고 SQLite backup API를 쓰거나 서버를 정상 종료한 뒤 백업합니다.
+- 설정은 관리 API를 통해 수정합니다. 실행 중 직접 SQL로 설정을 바꾸면 메모리 캐시에 반영되지 않습니다. CLI 비밀번호 변경은 예외로, 매 관리자 요청에서 DB 해시를 확인하므로 즉시 세션이 무효화됩니다.
+- 장치 장애는 마지막 상태를 available로 간주하지 않고 unknown으로 알립니다. 프론트엔드는 WebSocket 단절도 별도로 표시해야 합니다. 실물 카메라/Arduino의 네트워크·센서 정확도와 배포 프록시 설정은 해당 환경에서 검증해야 합니다.
+
+구현에서 참고한 공식 문서: [FastAPI lifespan](https://fastapi.tiangolo.com/advanced/events/), [SQLAlchemy SQLite](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html), [uv 잠금·동기화](https://docs.astral.sh/uv/concepts/projects/sync/).
