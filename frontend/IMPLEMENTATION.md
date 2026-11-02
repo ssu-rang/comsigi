@@ -67,10 +67,6 @@ snapshot 제한 시간, 선택적 heartbeat, StrictMode 및 장소 전환/언마
 - taste-skill 운영 화면 검사: **0 FAIL, 2 WARN**. 데이터 없는 화면 아래 여백과 탐색/상세 영역의
   서로 다른 높이는 실제 데이터 부재와 서로 다른 역할 때문에 유지했습니다. 가상 정보로 채우지 않았습니다.
 
-실행 로그/화면: `../.taste-skill/integration-qa/results.json`, `../.taste-skill/integration-qa/*.jpg`.
-디자인 검사: `../.taste-skill/integration-after/report.json`.
-화면 검토 근거: `../.taste-skill/integration-critique.txt`.
-
 ## 검증 중 수정한 문제
 
 - 개발 모듈의 HMR 재로딩 시 이벤트가 다른 모듈 인스턴스에 갇히는 문제를 창 이벤트로 해결.
