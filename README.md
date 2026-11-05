@@ -4,6 +4,16 @@ Python 3.12+, FastAPI, SQLAlchemy 2.x, SQLite, Alembic, Uvicorn으로 구현한 
 
 ## 실행
 
+Windows에서는 Python 3.12+, Node.js 22.12+, uv를 설치한 뒤 프로젝트 루트에서 명령 하나로 실행할 수 있습니다.
+
+```powershell
+.\dev.cmd
+```
+
+Python·프론트엔드 의존성 설치와 DB 마이그레이션을 처리한 뒤 백엔드와 프론트엔드를 함께 실행합니다. 최초 실행 시 `admin` 계정의 비밀번호(12자 이상)를 입력하며, 기존 계정은 그대로 사용합니다. 웹 화면은 http://localhost:8443, 관리자 로그인은 http://localhost:8443/#/admin/login 입니다. 터미널에서 Ctrl+C를 누르면 두 서버가 함께 종료됩니다. 8000·8443 포트는 비어 있어야 합니다.
+
+스크립트는 PATH의 `uv`를 사용하며, 없다면 이미 설치된 `.venv`를 재사용하거나 `py -m uv`를 사용합니다. 새 환경에 `uv`가 없다면 Windows Python 런처로 `py -m pip install uv`를 실행하세요. 기존 `.venv`를 재사용할 때 Python 의존성 갱신은 `uv sync --locked`로 진행합니다. 아래는 각 서버를 개별 실행하는 방법입니다.
+
 프로젝트 루트에서 실행합니다. [uv 설치 안내](https://docs.astral.sh/uv/getting-started/installation/)에 따라 uv를 설치하세요. `uv` 명령을 찾지 못하면 `python -m pip install uv` 이후 아래 명령의 `uv`를 `python -m uv`로 바꿀 수 있습니다.
 
 ```shell
@@ -22,6 +32,7 @@ uv run comsigi serve --host 0.0.0.0 --port 8000
 - 프로세스 확인: `GET /api/v1/health`
 - DB·만료 작업 확인: `GET /api/v1/ready`
 - 전체 연동 계약: [docs/API.md](docs/API.md)
+- 보안 점검 결과와 수정 우선순위: [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
 
 개발 시 `uv run comsigi serve --reload`를 사용합니다. reload도 서버 재시작이므로 점유 상태·장치 세션·관리자 로그인 세션이 초기화됩니다. 비밀번호 변경은 `uv run comsigi set-password --username admin`이며, 기존 로그인 토큰은 다음 요청부터 거부됩니다.
 

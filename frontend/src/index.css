@@ -15,8 +15,8 @@
   --accent: #267349;
   --accent-light: #eef6ee;
   --accent-edge: #6a9a75;
-  --occupied: #dfe4dc;
-  --occupied-ink: #5b6457;
+  --occupied: #fee2e2;
+  --occupied-ink: #b91c1c;
   --unknown: #81897b;
   --primary: #293327;
   --white: #ffffff;
@@ -134,8 +134,8 @@
 .availability-note p { font-size: 13px; margin-top: 9px; color: var(--faint); }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px 3px 2px 2px; flex-shrink: 0; }
 .swatch-available { background: var(--accent-light); border: 1px solid var(--accent); }
-.swatch-occupied { background: var(--occupied); border: 1px solid var(--unknown); }
-.swatch-unknown { border: 1px dashed var(--unknown); background: var(--surface); }
+.swatch-occupied { background: var(--occupied); border: 1px solid var(--occupied-ink); }
+.swatch-unknown { border: 1px dashed #a16207; background: #fef08a; }
 .map-toolbar { padding: 12px 28px; }
 .view-switch { gap: 20px; }
 .view-switch button { min-height: 32px; color: var(--faint); font-size: 13px; }
@@ -154,9 +154,9 @@
 .seat-available { color: var(--accent); }
 .seat-available .chair-shape { background: var(--accent-light); border-color: var(--accent-edge); }
 .seat-occupied { color: var(--occupied-ink); }
-.seat-occupied .chair-shape { background: var(--occupied); border-color: var(--control); }
-.seat-unknown { color: var(--muted); }
-.seat-unknown .chair-shape { background: var(--surface); border: 1px dashed var(--unknown); }
+.seat-occupied .chair-shape { background: var(--occupied); border-color: var(--occupied-ink); }
+.seat-unknown { color: #a16207; }
+.seat-unknown .chair-shape { background: #fef08a; border: 1px dashed #a16207; }
 .chair-shape small { position: absolute; right: -3px; top: -5px; background: var(--raised); border-radius: 50%; width: 12px; height: 12px; display: grid; place-items: center; font-size: 11px; }
 .seat-button:hover .chair-shape { outline: 1px solid var(--text); outline-offset: 2px; }
 .seat-button.is-selected { outline: 2px solid var(--text); outline-offset: 1px; }
