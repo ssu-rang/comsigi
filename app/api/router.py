@@ -47,16 +47,18 @@ async def layout(slug: str, request: Request):
 async def state(slug: str, request: Request):
     runtime = request.app.state.runtime
     async with runtime.lock:
-        runtime.expire()
-        return runtime.state(runtime.place_id(slug))
+        place_id = runtime.place_id(slug)
+        runtime.expire(place_id)
+        return runtime.state(place_id)
 
 
 @api_router.get("/places/{slug}/snapshot", response_model=Snapshot, tags=["public"])
 async def snapshot(slug: str, request: Request):
     runtime = request.app.state.runtime
     async with runtime.lock:
-        runtime.expire()
-        return runtime.snapshot(runtime.place_id(slug))
+        place_id = runtime.place_id(slug)
+        runtime.expire(place_id)
+        return runtime.snapshot(place_id)
 
 
 @api_router.get("/seats", response_model=LegacySeats, tags=["legacy"], deprecated=True)
@@ -64,7 +66,6 @@ async def legacy_seats(request: Request, place_slug: str | None = None):
     """Compatibility for the repository's existing polling frontend."""
     runtime = request.app.state.runtime
     async with runtime.lock:
-        runtime.expire()
         if place_slug:
             place_id = runtime.place_id(place_slug)
         elif not runtime.layouts:
@@ -73,6 +74,7 @@ async def legacy_seats(request: Request, place_slug: str | None = None):
             place_id = next(iter(runtime.layouts))
         else:
             raise DomainError(400, "place_required", "Supply place_slug when multiple places exist")
+        runtime.expire(place_id)
         return {
             "seats": [
                 {"id": seat["id"], "status": seat["status"]}
@@ -92,7 +94,7 @@ async def websocket_endpoint(websocket: WebSocket, slug: str):
     try:
         async with runtime.lock:
             place_id = runtime.place_id(slug)
-            runtime.expire()
+            runtime.expire(place_id)
             queue = runtime.subscribe(place_id)
     except DomainError:
         await websocket.close(code=1008)

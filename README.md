@@ -108,7 +108,7 @@ SQLite에는 장소, 좌석, 테이블, 배치, 장치 연결·인증 해시, �
 
 ## 프론트엔드 연결
 
-`GET /api/v1/places`로 장소를 선택하고 `/api/v1/places/{slug}/ws`에 연결합니다. 첫 `snapshot` 이벤트에 배치와 상태가 함께 있으므로 `seat.id`로 결합해 그리면 됩니다. 이후 `state_changed`는 일부 변경 항목, `layout_changed`는 전체 배치와 전체 상태를 담습니다. 재연결 시 새 스냅샷으로 교체합니다. 상세한 순서·연결 복구 규칙과 JavaScript 예제는 [API 문서](docs/API.md#websocket)를 참고하세요.
+`GET /api/v1/places`로 장소를 선택하고 `/api/v1/places/{slug}/layout`으로 배치를 조회합니다. WebSocket `/api/v1/places/{slug}/ws`는 점유 상태만 전달합니다. 첫 `snapshot`은 전체 상태, 이후 `state_changed`는 일부 변경 항목, 설정 변경 시 `state_reset`은 전체 상태를 담습니다. 상태의 `layout_version`이 HTTP 배치 버전과 다르면 배치를 다시 조회하며, 배치 데이터는 WebSocket으로 보내지 않습니다. 재연결 시 새 상태 스냅샷으로 교체합니다. 상세한 순서·연결 복구 규칙과 JavaScript 예제는 [API 문서](docs/API.md#websocket)를 참고하세요.
 
 기존 저장소 프론트엔드의 `GET /api/v1/seats`는 유지합니다. 장소가 하나이면 그 장소의 좌석을 반환하고, 여러 장소이면 `?place_slug=library`를 지정해야 합니다. 이 호환 경로의 `id`는 내부 ID이며 좌석 표시 번호가 아닙니다. 새 프론트엔드는 장소별 계약을 사용하세요. 현재 프론트엔드는 장소별 API·관리자 인증·배치 저장·장치 관리·WebSocket에 연결되어 있습니다. 실행 방법은 [frontend/README.md](frontend/README.md), 저장 보장과 검증 범위는 [frontend/INTEGRATION.md](frontend/INTEGRATION.md)를 확인하세요.
 

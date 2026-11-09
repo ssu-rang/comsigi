@@ -16,7 +16,7 @@ from app.config import Settings
 from app.db import create_database
 from app.errors import DomainError
 from app.realtime import Runtime
-from app.security import AuthState
+from app.security import AuthState, HardwareRequestGuard
 
 logger = logging.getLogger(__name__)
 SCHEMA_REVISION = "0001_initial"
@@ -66,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
+    app.add_middleware(HardwareRequestGuard)
 
     @app.exception_handler(DomainError)
     async def domain_error(_request: Request, exc: DomainError):

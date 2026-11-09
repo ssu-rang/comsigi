@@ -49,6 +49,10 @@ class Runtime:
         self.layouts: dict[int, dict] = {}
         self.seats: dict[int, dict] = {}
         self.devices: dict[int, dict] = {}
+        self.devices_by_uid: dict[str, dict] = {}
+        self.enabled_credential_hashes: set[str] = set()
+        self.devices_by_place: dict[int, list[int]] = {}
+        self.seat_ids_by_number: dict[int, dict[int, int]] = {}
         self.device_sessions: dict[int, DeviceRuntime] = {}
         self.observations: dict[int, dict[int, Observation]] = {}
         self.last_received: dict[int, str] = {}
@@ -116,6 +120,16 @@ class Runtime:
         old_places = set(self.layouts)
         self.seats, self.devices = new_seats, new_devices
         self.layouts = layouts
+        self.devices_by_uid = {d["device_uid"]: d for d in new_devices.values()}
+        self.enabled_credential_hashes = {
+            d["credential_hash"] for d in new_devices.values() if d["enabled"]
+        }
+        self.devices_by_place = {pid: [] for pid in layouts}
+        for did, device in new_devices.items():
+            self.devices_by_place[device["place_id"]].append(did)
+        self.seat_ids_by_number = {
+            pid: {s["number"]: s["id"] for s in layout["seats"]} for pid, layout in layouts.items()
+        }
         for place_id in old_places - self.layouts.keys():
             self.revisions[place_id] = self.revisions.get(place_id, 0) + 1
             self.broadcast(place_id, self.envelope(place_id, "place_deleted"))
@@ -126,8 +140,8 @@ class Runtime:
             self.revisions.setdefault(place_id, 0)
             if changed is not None and place_id in changed:
                 self.revisions[place_id] += 1
-                event = self.envelope(place_id, "layout_changed")
-                event.update(self.snapshot(place_id))
+                event = self.envelope(place_id, "state_reset")
+                event["state"] = self.state(place_id)
                 self.broadcast(place_id, event)
                 self.published[place_id] = self.status_maps(event["state"])
             elif changed is not None:
@@ -163,11 +177,7 @@ class Runtime:
 
     def state(self, place_id: int) -> dict:
         now = self.clock()[0]
-        device_states = [
-            self.device_status(did, now)
-            for did, d in self.devices.items()
-            if d["place_id"] == place_id
-        ]
+        device_states = [self.device_status(did, now) for did in self.devices_by_place[place_id]]
         online = {d["id"] for d in device_states if d["status"] == "online"}
         seats = []
         summary = {"total": 0, "available": 0, "occupied": 0, "unknown": 0}
@@ -229,7 +239,7 @@ class Runtime:
             self.broadcast(place_id, event)
 
     def begin_session(self, device_id: int) -> dict:
-        self.expire()
+        self.expire(self.devices[device_id]["place_id"], publish=False)
         now, timestamp = self.clock()
         session_id = secrets.token_urlsafe(32)
         self.remove_observations(device_id)
@@ -244,11 +254,24 @@ class Runtime:
 
     def ingest(self, device_id: int, report: HardwareReport) -> dict:
         """Validate the entire batch before applying it; duplicate retries have no side effects."""
-        self.expire()
+        place_id = self.devices[device_id]["place_id"]
+        self.expire(place_id, publish=False)
+        try:
+            accepted = self.apply_report(device_id, place_id, report)
+        finally:
+            # Publish expiry and the report together, also for duplicates and rejections.
+            self.publish_changes(place_id)
+        return {
+            "accepted": accepted,
+            "duplicate": not accepted,
+            "sequence": report.sequence,
+            "revision": self.revisions[place_id],
+        }
+
+    def apply_report(self, device_id: int, place_id: int, report: HardwareReport) -> bool:
         session = self.device_sessions.get(device_id)
         if session is None or not secrets.compare_digest(session.session_id, report.session_id):
             raise DomainError(409, "session_required", "Start a new hardware session")
-        place_id = self.devices[device_id]["place_id"]
         fingerprint = tuple(sorted((s.number, s.occupied) for s in report.seats))
         if report.sequence < session.sequence:
             raise DomainError(
@@ -259,13 +282,8 @@ class Runtime:
                 raise DomainError(
                     409, "sequence_conflict", "Sequence already used with another body"
                 )
-            return {
-                "accepted": False,
-                "duplicate": True,
-                "sequence": report.sequence,
-                "revision": self.revisions[place_id],
-            }
-        by_number = {s["number"]: s["id"] for s in self.layouts[place_id]["seats"]}
+            return False
+        by_number = self.seat_ids_by_number[place_id]
         unknown = sorted({s.number for s in report.seats} - by_number.keys())
         if unknown:
             raise DomainError(422, "unknown_seat_numbers", f"Unknown seat numbers: {unknown}")
@@ -278,27 +296,34 @@ class Runtime:
                 seat.occupied, now, timestamp
             )
             self.last_received[seat_id] = timestamp
-        self.publish_changes(place_id)
-        return {
-            "accepted": True,
-            "duplicate": False,
-            "sequence": report.sequence,
-            "revision": self.revisions[place_id],
-        }
+        return True
 
-    def expire(self):
+    def expire(self, place_id: int | None = None, publish: bool = True):
+        """Reports expire their own place; the periodic sweep still expires all places.
+
+        Remove stale observations before refreshing a device so a heartbeat cannot
+        resurrect readings from before a disconnection. Callers that publish right
+        after their own mutation pass publish=False to compute the state only once.
+        """
         now = self.clock()[0]
-        for observations in self.observations.values():
-            expired = [
+        places = self.layouts if place_id is None else (place_id,)
+        for pid in places:
+            online = {
                 did
-                for did, obs in observations.items()
-                if now - obs.received >= self.settings.seat_timeout_seconds
-                or self.device_status(did, now)["status"] != "online"
-            ]
-            for did in expired:
-                del observations[did]
-        for place_id in self.layouts:
-            self.publish_changes(place_id)
+                for did in self.devices_by_place[pid]
+                if self.device_status(did, now)["status"] == "online"
+            }
+            for seat in self.layouts[pid]["seats"]:
+                observations = self.observations.get(seat["id"], {})
+                expired = [
+                    did
+                    for did, obs in observations.items()
+                    if now - obs.received >= self.settings.seat_timeout_seconds or did not in online
+                ]
+                for did in expired:
+                    del observations[did]
+            if publish:
+                self.publish_changes(pid)
 
     def envelope(self, place_id: int, kind: str) -> dict:
         return {
@@ -328,7 +353,7 @@ class Runtime:
         queue: asyncio.Queue = asyncio.Queue(maxsize=self.settings.ws_queue_size)
         self.subscribers.setdefault(place_id, set()).add(queue)
         event = self.envelope(place_id, "snapshot")
-        event.update(self.snapshot(place_id))
+        event["state"] = self.state(place_id)
         queue.put_nowait(event)
         return queue
 

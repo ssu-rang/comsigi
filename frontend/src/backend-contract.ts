@@ -161,15 +161,12 @@ export function decodeEvent(raw: unknown): LiveEvent | "heartbeat" | null {
   const placeId = id(e.place_id),
     streamId = string(e.server_id),
     version = integer(e.revision)
-  if (e.type === "snapshot" || e.type === "layout_changed") {
-    const state = object(e.state),
-      layout = decodeLayout(e.layout)
+  if (e.type === "snapshot" || e.type === "state_reset") {
+    const state = object(e.state)
     if (
-      layout.placeId !== placeId ||
       id(state.place_id) !== placeId ||
       state.server_id !== streamId ||
-      state.revision !== version ||
-      state.layout_version !== layout.revision
+      state.revision !== version
     )
       invalid()
     return {
@@ -177,12 +174,11 @@ export function decodeEvent(raw: unknown): LiveEvent | "heartbeat" | null {
       placeId,
       streamId,
       version,
-      revision: layout.revision,
+      revision: integer(state.layout_version, 1),
       seats: decodeReadings(state.seats),
       staleAfterMs: Infinity,
-      layout,
-      // layout_changed is a full replacement but still participates in sequence checks.
-      incremental: e.type === "layout_changed",
+      // Configuration changes replace readings, including removal of deleted seats.
+      incremental: e.type === "state_reset",
     }
   }
   if (e.type === "state_changed")
@@ -191,6 +187,7 @@ export function decodeEvent(raw: unknown): LiveEvent | "heartbeat" | null {
       placeId,
       streamId,
       version,
+      revision: integer(e.layout_version, 1),
       changes: decodeReadings(e.seats),
     }
   if (e.type === "place_deleted")

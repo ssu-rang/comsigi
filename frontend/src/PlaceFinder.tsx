@@ -287,7 +287,7 @@ function PlaceDetail({
     () =>
       resource.data
         ? visibleSeats(
-            live.layout ?? resource.data.layout,
+            resource.data.layout,
             live,
             connection,
             now,
@@ -325,7 +325,7 @@ function PlaceDetail({
     return <ErrorNotice error={resource.error} retry={resource.reload} />
   if (!resource.data) return null
   const { place } = resource.data
-  const layout = live.layout ?? resource.data.layout
+  const layout = resource.data.layout
   const chosen = seats.find((s) => s.id === selected)
   const times = Object.values(live.occupancy)
     .map((r) => r.observedAt)

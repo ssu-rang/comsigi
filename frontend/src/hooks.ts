@@ -49,13 +49,8 @@ export function useLive(
   callback.current = onLayout
   const knownRevision = useRef(-1)
   useEffect(() => {
-    // A reconnect may have missed layout_updated. The snapshot revision is also
-    // authoritative; compare it after REST resolves, regardless of arrival order.
-    if (
-      !live.layout &&
-      layoutRevision !== undefined &&
-      live.revision > layoutRevision
-    )
+    // Geometry comes from HTTP. Compare versions regardless of arrival order.
+    if (layoutRevision !== undefined && live.revision > layoutRevision)
       callback.current()
   }, [layoutRevision, live.revision])
   useEffect(() => {
@@ -95,11 +90,6 @@ export function useLive(
           setLive(current)
           setNow(Date.now())
           if (event.type === "snapshot") {
-            if (
-              knownRevision.current >= 0 &&
-              event.revision > knownRevision.current
-            )
-              callback.current()
             knownRevision.current = event.revision
           }
         },

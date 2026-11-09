@@ -15,7 +15,8 @@ def test_snapshot_delta_dedup_layout_and_place_isolation(api, client, setup_room
     with client.websocket_connect("/api/v1/places/library/ws") as ws:
         initial = ws.receive_json()
         assert initial["type"] == "snapshot"
-        assert initial["layout"]["seats"][0]["id"] == seat["id"]
+        assert "layout" not in initial
+        assert initial["state"]["seats"][0]["id"] == seat["id"]
         assert initial["state"]["summary"]["unknown"] == 1
         with client.websocket_connect("/api/v1/places/other/ws") as other_ws:
             other_ws.receive_json()
@@ -35,8 +36,11 @@ def test_snapshot_delta_dedup_layout_and_place_isolation(api, client, setup_room
             assert other_ws.receive_json()["type"] == "pong"  # No cross-place leak.
             api.patch(f"/places/{place['id']}/seats/{seat['id']}", {"x": 100})
             edited = ws.receive_json()
-            assert edited["type"] == "layout_changed"
-            assert edited["layout"]["seats"][0]["x"] == 100
+            assert edited["type"] == "state_reset"
+            assert "layout" not in edited
+            layout = client.get("/api/v1/places/library/layout").json()
+            assert layout["seats"][0]["x"] == 100
+            assert edited["state"]["layout_version"] == layout["place"]["layout_version"]
             assert edited["state"]["seats"][0]["status"] == "occupied"
     with client.websocket_connect("/api/v1/places/library/ws") as ws:
         assert ws.receive_json()["state"]["seats"][0]["status"] == "occupied"

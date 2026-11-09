@@ -83,7 +83,8 @@ const subscribe = () =>
 let stop = subscribe()
 try {
   await waitFor(() => state === "live")
-  assert.equal(live.layout!.seats.length, 2)
+  assert.equal("layout" in live, false)
+  assert.equal((await api.getLayout(p.id)).seats.length, 2)
   const d = await api.createDevice({
     identifier: "integration-camera",
     name: "카메라",
@@ -116,11 +117,11 @@ try {
   assert.equal(live.occupancy["seat:1"].status, "available")
   // Unchanged sensor reports need not generate events. Never expire readings on the client.
   assert.equal(
-    visibleSeats(live.layout!, live, "live", Date.now() + 120000)[0].status,
-    live.occupancy[live.layout!.seats[0].id].status,
+    visibleSeats(layout, live, "live", Date.now() + 120000)[0].status,
+    live.occupancy[layout.seats[0].id].status,
   )
   assert.ok(
-    visibleSeats(live.layout!, live, "offline", Date.now()).every(
+    visibleSeats(layout, live, "offline", Date.now()).every(
       (s) => s.status === "unknown",
     ),
   )
@@ -142,9 +143,14 @@ try {
   layout.tables = []
   layout.seats = layout.seats.slice(0, 1).map((s) => ({ ...s, tableId: null }))
   layout = await api.saveLayout(layout)
-  await waitFor(() => live.layout?.revision === layout.revision)
-  assert.equal(live.layout!.tables.length, 0)
-  assert.equal(live.layout!.seats.length, 1)
+  await waitFor(() => live.revision === layout.revision)
+  const refreshed = await api.getLayout(p.id)
+  assert.equal(refreshed.tables.length, 0)
+  assert.equal(refreshed.seats.length, 1)
+  assert.deepEqual(
+    Object.keys(live.occupancy),
+    refreshed.seats.map((s) => s.id),
+  )
 
   await api.updatePlace(
     p.id,

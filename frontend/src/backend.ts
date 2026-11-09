@@ -99,7 +99,12 @@ export function createBackend(request: Request = requestJson): SeatService {
       return decodePlace(object(s.layout).place, s.state)
     },
     async getLayout(id, signal) {
-      return decodeLayout((await snapshot(id, signal)).layout)
+      const p = await resolve(id, signal)
+      return decodeLayout(
+        await request(`/api/v1/places/${encodeURIComponent(p.slug)}/layout`, {
+          signal,
+        }),
+      )
     },
     async session() {
       if (!token) return null

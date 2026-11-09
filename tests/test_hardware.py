@@ -34,6 +34,7 @@ def test_reports_idempotency_order_and_atomic_validation(api, setup_room):
         {"sequence": True},
         {"sequence": -1},
         {"sequence": 1.5},
+        {"session_id": "é" * 43},
         {"seats": [{"number": 1, "occupied": "false"}]},
         {"seats": [{"number": 1, "occupied": 0}]},
         {"seats": [{"number": 1, "occupied": True, "x": 10}]},
@@ -146,3 +147,37 @@ def test_concurrent_reports_cannot_roll_state_back(api, client, setup_room):
     assert all(response.status_code in {200, 409} for response in responses)
     assert api.state(place)["seats"][0]["status"] == "occupied"  # Sequence 19 wins.
     assert client.app.state.runtime.device_sessions[device["device"]["id"]].sequence == 19
+
+
+def test_unauthenticated_or_oversized_body_is_rejected_before_parsing(api, client, setup_room):
+    _, _, device = setup_room
+    url = "/api/v1/hardware/reports"
+    headers = {"Content-Type": "application/json"}
+    for auth in ({}, {"Authorization": "Bearer wrong"}):
+        response = client.post(url, content=b"{not json", headers={**headers, **auth})
+        assert response.status_code == 401, response.text
+        assert response.json()["error"]["code"] == "device_unauthorized"
+    authorized = {**headers, **api.device_headers(device)}
+    huge = b'{"seats":[' + b"0," * 40_000 + b"0]}"
+    assert client.post(url, content=huge, headers=authorized).status_code == 413
+    chunked = client.post(url, content=iter([huge[:40_000], huge[40_000:]]), headers=authorized)
+    assert chunked.status_code == 413
+    assert client.post(url, content=b"{not json", headers=authorized).status_code == 422
+
+
+def test_public_read_and_report_compute_state_once(api, client, setup_room, monkeypatch):
+    place, _, device = setup_room
+    api.seat(api.place("other"))
+    session = api.session(device)
+    runtime = client.app.state.runtime
+    client.app.state.sweeper.cancel()  # Keep the periodic sweep out of the count.
+    calls = []
+    original = runtime.state
+    monkeypatch.setattr(runtime, "state", lambda pid: calls.append(pid) or original(pid))
+    api.state(place)
+    assert calls == [place["id"], place["id"]]  # expire(place) + response
+    assert client.get("/api/v1/places/missing/state").status_code == 404
+    assert calls == [place["id"], place["id"]]
+    calls.clear()
+    api.report(device, session, 0, [{"number": 1, "occupied": True}])
+    assert calls == [place["id"]]

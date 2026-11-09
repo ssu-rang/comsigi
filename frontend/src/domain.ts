@@ -81,13 +81,13 @@ export type LiveEvent = {
   revision: number
   seats: Occupancy
   staleAfterMs: number
-  layout?: Layout
   incremental?: boolean
 } | {
   type: "seat_update"
   placeId: Id
   streamId: string
   version: number
+  revision?: number
   changes: Occupancy
 } | {
   type: "layout_updated"

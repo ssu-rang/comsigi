@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pwdlib import PasswordHash
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -78,10 +79,73 @@ async def require_admin(
 
 
 def authenticate_device(runtime, uid: str, credentials: HTTPAuthorizationCredentials | None) -> int:
-    device = next((d for d in runtime.devices.values() if d["device_uid"] == uid), None)
+    device = runtime.devices_by_uid.get(uid)
     provided_hash = token_hash(credentials.credentials if credentials else "")
     expected_hash = device["credential_hash"] if device else "0" * 64
     valid = secrets.compare_digest(provided_hash, expected_hash)
     if not valid or device is None or not device["enabled"]:
         raise DomainError(401, "device_unauthorized", "Device credentials invalid or disabled")
     return device["id"]
+
+
+class HardwareRequestGuard:
+    """Reject unknown credentials and oversized bodies before the JSON body is parsed.
+
+    authenticate_device still binds the credential to the device_uid in the body.
+    """
+
+    max_body_bytes = 64 * 1024  # A 500-seat report is well under 32 KiB.
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or not scope["path"].startswith("/api/v1/hardware/"):
+            return await self.app(scope, receive, send)
+        headers = dict(scope["headers"])
+        scheme, _, token = headers.get(b"authorization", b"").decode("latin-1").partition(" ")
+        known = scope["app"].state.runtime.enabled_credential_hashes
+        if scheme.lower() != "bearer" or token_hash(token) not in known:
+            return await self.reject(
+                scope,
+                receive,
+                send,
+                401,
+                "device_unauthorized",
+                "Device credentials invalid or disabled",
+            )
+        length = headers.get(b"content-length", b"0")
+        if not length.isdigit() or int(length) > self.max_body_bytes:
+            return await self.reject(
+                scope, receive, send, 413, "body_too_large", "Request body too large"
+            )
+        body = b""
+        while True:
+            message = await receive()
+            if message["type"] != "http.request":
+                return  # Client disconnected.
+            body += message.get("body", b"")
+            if len(body) > self.max_body_bytes:  # Chunked bodies have no Content-Length.
+                return await self.reject(
+                    scope, receive, send, 413, "body_too_large", "Request body too large"
+                )
+            if not message.get("more_body"):
+                break
+        replayed = False
+
+        async def replay():
+            nonlocal replayed
+            if replayed:
+                return await receive()
+            replayed = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        await self.app(scope, replay, send)
+
+    @staticmethod
+    async def reject(scope, receive, send, status, code, message):
+        headers = {"WWW-Authenticate": "Bearer"} if status == 401 else {}
+        response = JSONResponse(
+            {"error": {"code": code, "message": message}}, status_code=status, headers=headers
+        )
+        await response(scope, receive, send)

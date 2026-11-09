@@ -14,7 +14,6 @@ export type LiveState = {
   occupancy: Occupancy
   staleAfterMs: number
   synced: boolean
-  layout?: Layout
 }
 export const initialLive = (): LiveState => ({
   streamId: null,
@@ -55,7 +54,6 @@ export function applyEvent(
         occupancy: event.seats,
         staleAfterMs: event.staleAfterMs,
         synced: true,
-        layout: event.layout,
       },
       resync: false,
     }
@@ -78,6 +76,7 @@ export function applyEvent(
     state: {
       ...state,
       version: event.version,
+      revision: event.revision ?? state.revision,
       occupancy: { ...state.occupancy, ...event.changes },
     },
     resync: false,
@@ -95,6 +94,7 @@ export function visibleSeats(
     const fresh =
       connection === "live" &&
       live.synced &&
+      live.revision === layout.revision &&
       !!reading &&
       (live.staleAfterMs === Infinity ||
         (Number.isFinite(time) && now - time <= live.staleAfterMs))

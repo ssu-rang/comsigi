@@ -218,7 +218,7 @@ class SeatReport(Schema):
 
 
 class HardwareReport(HardwareSession):
-    session_id: Annotated[str, Field(min_length=20, max_length=100)]
+    session_id: Annotated[str, Field(min_length=20, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")]
     sequence: Annotated[StrictInt, Field(ge=0, le=9007199254740991)]
     seats: list[SeatReport] = Field(max_length=500)
 

@@ -47,7 +47,6 @@ const event = (type = "snapshot", revision = 1) => ({
   server_id: "server",
   place_id: 1,
   revision,
-  layout: rawLayout,
   state: {
     server_id: "server",
     place_id: 1,
@@ -73,28 +72,43 @@ test("wire IDs are namespaced and backend circle maps to the existing renderer",
     ApiError,
   )
 })
-test("backend decides freshness; full layout events still require consecutive revisions", () => {
+test("state-only snapshots use HTTP geometry; resets require consecutive revisions", () => {
   const snapshot = decodeEvent(event())
   assert.ok(snapshot && snapshot !== "heartbeat")
   const live = applyEvent(initialLive(), snapshot).state
+  const layout = decodeLayout(rawLayout)
+  assert.equal("layout" in live, false)
   assert.equal(
-    visibleSeats(live.layout!, live, "live", Date.now())[0].status,
+    visibleSeats(layout, live, "live", Date.now())[0].status,
     "available",
   )
   assert.equal(
-    visibleSeats(live.layout!, live, "reconnecting", Date.now())[0].status,
+    visibleSeats(layout, live, "reconnecting", Date.now())[0].status,
     "unknown",
   )
-  const update = decodeEvent(event("layout_changed", 2))
+  const update = decodeEvent(event("state_reset", 2))
   assert.ok(update && update !== "heartbeat")
   assert.equal(applyEvent(live, update).resync, false)
-  const gap = decodeEvent(event("layout_changed", 3))
+  const gap = decodeEvent(event("state_reset", 3))
   assert.ok(gap && gap !== "heartbeat")
   assert.equal(applyEvent(live, gap).resync, true)
   assert.equal(applyEvent(initialLive(), update).resync, true)
   assert.throws(() =>
     decodeEvent({ ...event(), state: { ...event().state, place_id: 2 } }),
   )
+  const newLayout = { ...layout, revision: 2 }
+  assert.equal(
+    visibleSeats(newLayout, live, "live", Date.now())[0].status,
+    "unknown",
+  )
+  const reset = event("state_reset", 2)
+  reset.state.layout_version = 2
+  reset.state.seats = []
+  const decoded = decodeEvent(reset)
+  assert.ok(decoded && decoded !== "heartbeat")
+  const next = applyEvent(live, decoded).state
+  assert.equal(next.revision, 2)
+  assert.deepEqual(next.occupancy, {})
 })
 test("a stale editor cannot perform any CRUD writes", async () => {
   const calls: string[] = []

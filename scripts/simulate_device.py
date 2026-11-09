@@ -1,44 +1,61 @@
 """A standard-library HTTP sensor simulator; no images or coordinates are sent."""
 
 import argparse
+import http.client
 import json
 import os
 import time
-from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
 
 
 class NewSessionRequired(Exception):
     pass
 
 
-def post(base_url, path, body, credential):
-    request = Request(
-        base_url + "/api/v1/hardware/" + path,
-        data=json.dumps(body).encode(),
-        headers={"Content-Type": "application/json", "Authorization": "Bearer " + credential},
-        method="POST",
-    )
-    for attempt in range(3):
-        try:
-            with urlopen(request, timeout=5) as response:
-                return json.load(response)
-        except HTTPError as exc:
+class DeviceClient:
+    """Reuse one HTTP(S) connection; reconnect and retry the identical batch on failure."""
+
+    def __init__(self, base_url, credential):
+        parsed = urlparse(base_url)
+        connection = (
+            http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
+        )
+        self.connection = connection(parsed.hostname, parsed.port, timeout=5)
+        self.prefix = parsed.path.rstrip("/") + "/api/v1/hardware/"
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + credential,
+        }
+
+    def close(self):
+        self.connection.close()
+
+    def post(self, path, body):
+        data = json.dumps(body, separators=(",", ":")).encode()
+        for attempt in range(3):
             try:
-                error = json.loads(exc.read(4096)).get("error", {})
-            except (ValueError, AttributeError):
-                error = {}
-            code = error.get("code", "http_error")
-            if exc.code == 409 and code == "session_required":
-                raise NewSessionRequired from exc
-            if exc.code < 500 and exc.code != 429:
-                raise SystemExit(f"Server rejected the report: HTTP {exc.code}, {code}") from exc
-        except (URLError, TimeoutError, OSError):
-            pass
-        if attempt < 2:
-            time.sleep(2**attempt)
-    return None
+                self.connection.request("POST", self.prefix + path, body=data, headers=self.headers)
+                response = self.connection.getresponse()
+                # Drain the response before reusing the connection, including errors.
+                payload = response.read()
+                if 200 <= response.status < 300:
+                    return json.loads(payload)
+                try:
+                    error = json.loads(payload).get("error", {})
+                except (ValueError, AttributeError):
+                    error = {}
+                code = error.get("code", "http_error")
+                if response.status == 409 and code == "session_required":
+                    raise NewSessionRequired
+                if response.status < 500 and response.status != 429:
+                    raise SystemExit(f"Server rejected the report: HTTP {response.status}, {code}")
+            except (http.client.HTTPException, OSError, ValueError):
+                self.close()
+                if attempt == 0:
+                    continue  # The server may have closed the idle connection; reconnect now.
+            if attempt < 2:
+                time.sleep(2**attempt)
+        return None
 
 
 def main():
@@ -57,14 +74,21 @@ def main():
     if len(args.seats) > 500 or len(set(args.seats)) != len(args.seats) or min(args.seats) <= 0:
         parser.error("Provide 1–500 distinct positive seat numbers")
     parsed = urlparse(args.base_url)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username:
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.query
+        or parsed.fragment
+    ):
         parser.error("base-url must be an HTTP(S) server URL without credentials")
     base_url = args.base_url.rstrip("/")
+    transport = DeviceClient(base_url, credential)
     session, sequence, cycle = None, 0, 0
     try:
         while args.cycles == 0 or cycle < args.cycles:
             if session is None:
-                result = post(base_url, "session", {"device_uid": args.device_uid}, credential)
+                result = transport.post("session", {"device_uid": args.device_uid})
                 if result is None:
                     print("Server unreachable; retrying session in 5 seconds.")
                     time.sleep(5)
@@ -85,7 +109,7 @@ def main():
                 "seats": seats,
             }
             try:
-                result = post(base_url, "reports", body, credential)
+                result = transport.post("reports", body)
             except NewSessionRequired:
                 session = None
                 time.sleep(1)
@@ -100,6 +124,8 @@ def main():
                 time.sleep(args.interval)
     except KeyboardInterrupt:
         print("\nSimulator stopped.")
+    finally:
+        transport.close()
 
 
 if __name__ == "__main__":
