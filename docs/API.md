@@ -34,6 +34,12 @@ HTTP 접두사는 `/api/v1`입니다. 모든 시각은 서버 수신 기준 UTC 
 | `/admin/devices` | GET, POST | 장치 목록·등록; GET은 `?place_id=` 필터 지원 |
 | `/admin/devices/{device_id}` | GET, PATCH, DELETE | 장치 조회·수정·삭제 |
 | `/admin/devices/{device_id}/rotate-credential` | POST | 새 장치 키 발급 및 기존 키·세션 무효화 |
+| `/admin/pairing-codes` | GET, POST | 카메라 페어링 코드 목록(코드 값 제외)·발급(201, 코드는 이 응답에서만) |
+| `/admin/pairing-codes/{code_id}` | DELETE | 페어링 코드 폐기 |
+| `/admin/device-registrations` | GET | 카메라 등록 요청 목록; `?status=pending` 등 필터 지원 |
+| `/admin/device-registrations/{id}/approve` | POST | 공간을 지정해 승인, 장치·좌석 생성(200) |
+| `/admin/device-registrations/{id}/reject` | POST | 등록 요청 거절(200) |
+| `/admin/provisioning-failures` | GET | 최근 페어링 인증 실패(서버 메모리, 재시작 시 초기화) |
 
 목록은 JSON 배열입니다. 장치 조회에는 `status: online/offline/disabled`, `last_seen_at`이 포함되며 키나 해시가 포함되지 않습니다. 장소 삭제는 하위 장치도 삭제합니다.
 
@@ -74,6 +80,69 @@ Content-Type: application/json
 ```
 
 응답은 `{"device":{...},"credential":"..."}`입니다. credential은 하드웨어에 저장합니다. 분실 시 조회할 수 없고 재발급해야 합니다. PATCH로 장치 이름·장소·활성 여부를 변경할 수 있습니다. 장치의 인증으로 관리자 API에 접근할 수 없습니다.
+
+## 카메라 자동 등록
+
+관리자가 UID를 입력하지 않고 카메라를 공간에 연결하는 흐름입니다. 카메라 쪽 요청·응답·재시도 규칙은 [HARDWARE.md](HARDWARE.md#0-자동-등록페어링)에 있습니다.
+
+1. 관리자: `POST /admin/places`로 공간을 만듭니다. `place_id`는 서버가 발급하며 응답의 `id`를 이후 요청에 씁니다.
+2. 관리자: `POST /admin/pairing-codes`로 페어링 코드를 받아 카메라 설정에 넣습니다.
+3. 카메라: `POST /provisioning/register`(Bearer 페어링 코드)로 하드웨어 UID와 좌석 번호를 보내고 등록 비밀값을 받습니다. 요청은 `pending`으로 DB에 저장됩니다.
+4. 관리자: `GET /admin/device-registrations?status=pending`을 주기적으로 조회(REST 폴링, 관리자 화면은 5초)합니다.
+5. 관리자: `POST /admin/device-registrations/{id}/approve`로 공간을 지정합니다. 장치와 없는 번호의 좌석을 한 트랜잭션으로 만듭니다.
+6. 카메라: `POST /provisioning/status`(Bearer 등록 비밀값)로 장치 키를 받고, `POST /hardware/registration/confirm`(Bearer 장치 키)으로 수령을 확인합니다.
+
+```http
+POST /api/v1/admin/pairing-codes
+Authorization: Bearer <admin-token>
+```
+
+```json
+{"id":3,"status":"active","created_at":"2026-01-01T00:00:00Z","expires_at":"2026-01-01T00:15:00Z","used_at":null,"revoked_at":null,"code":"한 번만 표시되는 코드"}
+```
+
+```http
+POST /api/v1/admin/device-registrations/7/approve
+Authorization: Bearer <admin-token>
+Content-Type: application/json
+
+{"place_id":1,"name":"입구 카메라","create_seats":true}
+```
+
+```json
+{
+  "registration":{"id":7,"device_uid":"e6614103e7a5b52b","status":"approved","model":"OpenMV H7","firmware_version":"1.0","seat_numbers":[1,2,3],"requested_at":"...","expires_at":"...","decided_at":"...","place_id":1,"device_id":4},
+  "device":{"id":4,"device_uid":"e6614103e7a5b52b","name":"입구 카메라","place_id":1,"enabled":true,"created_at":"...","status":"offline","last_seen_at":null},
+  "seats_created":[1,3],
+  "seats_existing":[2]
+}
+```
+
+등록 상태(`status`)는 다음과 같습니다.
+
+| 값 | 의미 |
+| --- | --- |
+| `pending` | 승인 대기 (기본 24시간 후 `expired`) |
+| `approved` | 승인됨, 카메라가 장치 키를 아직 수령 확인하지 않음 |
+| `completed` | 카메라가 장치 키로 수령을 확인함 |
+| `rejected` | 관리자가 거절 |
+| `expired` | 승인 기한이 지남. 승인하면 `409 registration_expired` |
+| `removed` | 승인 후 장치·공간이 삭제됨 |
+
+- 승인은 멱등입니다. 같은 공간으로 다시 승인하면 아무것도 만들지 않고 현재 결과(`seats_created: []`)를 반환합니다. 다른 공간이면 `409 registration_already_approved`입니다. 장소 변경은 기존 `PATCH /admin/devices/{id}`로 합니다.
+- 좌석은 보고된 번호 중 없는 번호만 만들고, 기존 좌석을 수정·삭제하지 않습니다. 새 좌석은 겹치지 않는 40×40 격자에 놓이며 필요하면 캔버스 높이만 늘어나고 `layout_version`이 증가합니다. 캔버스 너비가 좌석보다 좁으면 `422 canvas_too_small`이고 아무것도 저장하지 않습니다.
+- 대기·만료·거절 요청만 거절할 수 있습니다. 승인된 장치를 끊으려면 장치를 삭제합니다(등록은 `removed`).
+- 응답과 목록에는 페어링 코드·등록 비밀값·장치 키·해시가 없습니다. 장치 키는 카메라에만 한 번씩 전달되고, 관리자 응답에는 포함되지 않습니다. 관리자가 키를 직접 받아야 하면 기존 `rotate-credential`을 사용합니다.
+- 관리자 토큰으로는 카메라 엔드포인트를, 페어링 코드·등록 비밀값·장치 키로는 관리자 API를 호출할 수 없습니다. 공개 조회 API와 WebSocket에는 등록 정보와 UID가 나오지 않습니다.
+- 대기 요청·페어링 코드는 SQLite에 저장되어 서버 재시작 뒤에도 유지됩니다. 인증 실패 기록(`/admin/provisioning-failures`)과 실패 횟수 제한만 메모리에 있습니다.
+
+설정 환경 변수(기본값): `COMSIGI_PAIRING_CODE_TTL_SECONDS`(900), `COMSIGI_REGISTRATION_TTL_SECONDS`(86400), `COMSIGI_REGISTRATION_POLL_SECONDS`(10), `COMSIGI_MAX_ACTIVE_PAIRING_CODES`(50, 넘으면 `409 too_many_pairing_codes`).
+
+### 하위 호환성과 전환
+
+- 기존 API·하드웨어 계약은 바뀌지 않았습니다. 수동 장치 등록(`POST /admin/devices`)과 기존 장치 키는 그대로 동작합니다.
+- 마이그레이션 `0002_device_provisioning`은 `pairing_tokens`, `device_registrations` 테이블만 추가합니다. 배포 시 기존처럼 `alembic upgrade head`(또는 `comsigi prepare-deploy`)를 실행하면 됩니다. 서버는 스키마가 최신이 아니면 시작하지 않습니다. 되돌리려면 이전 코드로 돌아가기 전에 `alembic downgrade 0001_initial`을 실행합니다(등록 요청 기록만 삭제).
+- 기존 장치를 자동 등록으로 옮길 필요는 없습니다. 이미 있는 UID로 등록을 요청하면 `409 device_already_registered`입니다.
 
 ## 배치 저장
 
@@ -295,12 +364,12 @@ Pydantic 검증 오류는 `422 validation_error`이며 `error.details`에 필드
 | 상태 | 의미 |
 | --- | --- |
 | 400 | 호환 좌석 API에 장소 지정 필요 |
-| 401 | 관리자/장치 인증 실패; `WWW-Authenticate: Bearer` 포함 |
+| 401 | 관리자/장치/페어링 코드/등록 비밀값 인증 실패; `WWW-Authenticate: Bearer` 포함 |
 | 404 | 장소·좌석·테이블·장치가 없거나 다른 장소의 객체 |
-| 409 | 중복 slug/번호/UID, 배치 버전 충돌, 장치 세션/순서 오류 |
-| 413 | 하드웨어 요청 본문 64 KiB 초과 |
+| 409 | 중복 slug/번호/UID, 배치 버전 충돌, 장치 세션/순서 오류, 카메라 등록 상태 충돌 |
+| 413 | 하드웨어·카메라 등록 요청 본문 64 KiB 초과 |
 | 422 | JSON·필드·좌표·배치 ID·하드웨어 좌석 번호 오류 |
-| 429 | 로그인 빈도/관리자 세션 상한; `Retry-After: 60` |
+| 429 | 로그인 빈도/관리자 세션 상한/페어링 인증 실패 횟수; `Retry-After: 60` |
 | 503 | DB 장애 또는 만료 작업 비정상 (`/ready`) |
 
 정의되지 않은 경로·메서드 등 프레임워크 기본 오류(404/405)는 FastAPI의 `detail` 형태일 수 있습니다.

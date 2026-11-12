@@ -1,5 +1,6 @@
 import { ApiError } from "./api.ts"
 import type {
+  CameraRegistration,
   Device,
   Geometry,
   Layout,
@@ -205,3 +206,38 @@ export function serverId(value: string, kind?: "seat" | "table"): number {
     throw new ApiError("저장된 요소 식별자가 올바르지 않습니다.", 422)
   return integer(Number(raw), 1)
 }
+
+const REGISTRATION_STATUSES = [
+  "pending",
+  "approved",
+  "completed",
+  "rejected",
+  "expired",
+  "removed",
+]
+export function decodeRegistration(value: unknown): CameraRegistration {
+  const r = object(value)
+  if (!REGISTRATION_STATUSES.includes(string(r.status))) invalid()
+  return {
+    id: id(r.id),
+    identifier: string(r.device_uid),
+    status: r.status as CameraRegistration["status"],
+    model: string(r.model),
+    firmwareVersion: string(r.firmware_version),
+    seatNumbers: array(r.seat_numbers).map((n) => integer(n, 1)),
+    requestedAt: date(r.requested_at)!,
+    expiresAt: date(r.expires_at)!,
+    placeId: r.place_id === null ? null : id(r.place_id),
+    deviceId: r.device_id === null ? null : id(r.device_id),
+  }
+}
+export function decodeFailure(value: unknown) {
+  const f = object(value)
+  return {
+    identifier: f.device_uid === null ? null : string(f.device_uid),
+    reason: string(f.reason),
+    at: date(f.at)!,
+  }
+}
+export const seatNumbers = (value: unknown) =>
+  array(value).map((n) => integer(n, 1))

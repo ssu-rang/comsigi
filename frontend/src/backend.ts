@@ -4,12 +4,15 @@ import {
   array,
   decodeDevice,
   decodeEvent,
+  decodeFailure,
+  decodeRegistration,
   decodeLayout,
   decodePlace,
   object,
   serverId,
   string,
   number,
+  seatNumbers,
 } from "./backend-contract.ts"
 import { connectSocket } from "./realtime.ts"
 import { saveBackendLayout } from "./backend-layout.ts"
@@ -203,6 +206,56 @@ export function createBackend(request: Request = requestJson): SeatService {
           ),
         ).credential,
       )
+    },
+    provisioning: {
+      async issuePairingCode() {
+        const result = object(
+          await admin("/api/v1/admin/pairing-codes", { method: "POST" }),
+        )
+        return {
+          code: string(result.code),
+          expiresAt: string(result.expires_at),
+        }
+      },
+      async listRegistrations(signal) {
+        return array(
+          await admin("/api/v1/admin/device-registrations", { signal }),
+        ).map(decodeRegistration)
+      },
+      async listFailures(signal) {
+        return array(
+          await admin("/api/v1/admin/provisioning-failures", { signal }),
+        ).map(decodeFailure)
+      },
+      async approve(id, input) {
+        const result = object(
+          await admin(
+            `/api/v1/admin/device-registrations/${serverId(id)}/approve`,
+            {
+              method: "POST",
+              ...body({
+                place_id: serverId(input.placeId),
+                name: input.name,
+                create_seats: input.createSeats,
+              }),
+            },
+          ),
+        )
+        return {
+          registration: decodeRegistration(result.registration),
+          device: decodeDevice(result.device),
+          seatsCreated: seatNumbers(result.seats_created),
+          seatsExisting: seatNumbers(result.seats_existing),
+        }
+      },
+      async reject(id) {
+        return decodeRegistration(
+          await admin(
+            `/api/v1/admin/device-registrations/${serverId(id)}/reject`,
+            { method: "POST" },
+          ),
+        )
+      },
     },
     subscribe(id, sink) {
       return connectSocket(

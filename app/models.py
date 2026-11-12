@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     DateTime,
@@ -98,6 +99,53 @@ class Device(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     credential_hash: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PairingToken(Base):
+    """One-time code an administrator hands to a camera. Only the SHA-256 hash is stored."""
+
+    __tablename__ = "pairing_tokens"
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class DeviceRegistration(Base):
+    """A camera's self-registration request; one row per hardware UID, reused on re-pairing."""
+
+    __tablename__ = "device_registrations"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'approved', 'completed', 'rejected')",
+            name="ck_registration_status",
+        ),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    device_uid: Mapped[str] = mapped_column(String(100), unique=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    secret_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    pairing_token_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pairing_tokens.id", ondelete="SET NULL"), index=True
+    )
+    seat_numbers: Mapped[list[int]] = mapped_column(JSON, default=list)
+    model: Mapped[str] = mapped_column(String(100), default="")
+    firmware_version: Mapped[str] = mapped_column(String(50), default="")
+    place_id: Mapped[int | None] = mapped_column(
+        ForeignKey("places.id", ondelete="SET NULL"), index=True
+    )
+    device_id: Mapped[int | None] = mapped_column(
+        ForeignKey("devices.id", ondelete="SET NULL"), index=True
+    )
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Admin(Base):

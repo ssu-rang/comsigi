@@ -100,12 +100,15 @@ class HardwareRequestGuard:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or not scope["path"].startswith("/api/v1/hardware/"):
+        path = scope["path"] if scope["type"] == "http" else ""
+        hardware = path.startswith("/api/v1/hardware/")
+        # Pairing endpoints authenticate in the handler but share the body size limit.
+        if not hardware and not path.startswith("/api/v1/provisioning/"):
             return await self.app(scope, receive, send)
         headers = dict(scope["headers"])
         scheme, _, token = headers.get(b"authorization", b"").decode("latin-1").partition(" ")
         known = scope["app"].state.runtime.enabled_credential_hashes
-        if scheme.lower() != "bearer" or token_hash(token) not in known:
+        if hardware and (scheme.lower() != "bearer" or token_hash(token) not in known):
             return await self.reject(
                 scope,
                 receive,

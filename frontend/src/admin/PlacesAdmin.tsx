@@ -87,6 +87,14 @@ export function PlacesAdmin() {
                         >
                           배치 편집
                         </Link>
+                        {service.provisioning && (
+                          <Link
+                            className="secondary-button"
+                            to={`/admin/setup/${place.id}`}
+                          >
+                            카메라 연결
+                          </Link>
+                        )}
                         <button onClick={() => setEditing(place)}>설정</button>
                         <button
                           className="danger-text"
@@ -128,7 +136,13 @@ export function PlacesAdmin() {
             setEditing(null)
             places.reload()
             notifyDataChanged()
-            if (creating) navigate(`/admin/layout/${place.id}`)
+            // The server issues the place ID; continue in the resumable setup flow.
+            if (creating)
+              navigate(
+                service.provisioning
+                  ? `/admin/setup/${place.id}`
+                  : `/admin/layout/${place.id}`,
+              )
           }}
         />
       )}
@@ -303,7 +317,13 @@ function PlaceForm({
             취소
           </button>
           <button className="primary-button" disabled={busy}>
-            {busy ? "저장 중…" : place ? "변경사항 저장" : "만들고 배치하기"}
+            {busy
+              ? "저장 중…"
+              : place
+                ? "변경사항 저장"
+                : service.provisioning
+                  ? "만들고 카메라 연결하기"
+                  : "만들고 배치하기"}
           </button>
         </div>
       </form>

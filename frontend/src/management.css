@@ -210,3 +210,19 @@
   .room-panel > .notice { margin-inline: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .canvas-scroll { scroll-behavior: auto; } }
+
+/* Camera self-registration and place setup */
+.setup-steps { list-style: none; padding: 0; display: grid; gap: 16px; }
+.setup-step-body { padding: 0 24px 24px; display: grid; gap: 12px; min-width: 0; }
+.setup-step-body .section-heading { padding: 12px 0; }
+.setup-step-body .data-state { margin: 0; min-height: 140px; }
+.setup-devices { display: grid; gap: 6px; padding: 0; list-style: none; font-size: 14px; }
+.pairing-code { display: grid; gap: 12px; justify-items: start; }
+.pairing-code .notice { width: 100%; margin: 0; }
+.pending-cameras { min-width: 0; }
+.registration-pending::before, .registration-approved::before { background: var(--text); }
+.registration-completed::before { background: var(--primary); }
+.registration-failed::before, .registration-rejected::before, .registration-expired::before { background: var(--negative); }
+.failure-list { margin-top: 12px; font-size: 13px; color: var(--muted); }
+.failure-list summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.failure-list ul { display: grid; gap: 6px; padding-left: 4px; list-style: none; }

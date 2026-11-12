@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { Device, DeviceInput, Place } from "../domain"
 import { timestamp } from "../domain"
 import { service } from "../service"
 import { notifyDataChanged, useDataRefresh, useResource } from "../hooks"
 import { EmptyState, ErrorNotice, Loading, Modal } from "../ui"
 import { Link } from "../router"
+import { PairingCodePanel, PendingCameras } from "./CameraPairing"
 
 export function DevicesAdmin() {
   const resource = useResource(async (signal) => {
@@ -15,6 +16,9 @@ export function DevicesAdmin() {
     return { devices, places }
   })
   useDataRefresh(resource.reload)
+  // Keep the pairing list mounted while the device list refreshes after an approval.
+  const lastPlaces = useRef<Place[] | null>(null)
+  if (resource.data) lastPlaces.current = resource.data.places
   const [editing, setEditing] = useState<Device | "new" | null>(null),
     [token, setToken] = useState<string | null>(null)
   const [rotating, setRotating] = useState<Device | null>(null),
@@ -36,6 +40,22 @@ export function DevicesAdmin() {
         </button>
       </div>
       <ErrorNotice error={resource.error || error} retry={resource.reload} />
+      {service.provisioning && (
+        <section className="admin-panel setup-step" aria-label="카메라 자동 등록">
+          <div className="section-heading">
+            <h2>카메라 자동 등록</h2>
+          </div>
+          <div className="setup-step-body">
+            <PairingCodePanel provisioning={service.provisioning} />
+            {lastPlaces.current && (
+              <PendingCameras
+                provisioning={service.provisioning}
+                places={lastPlaces.current}
+              />
+            )}
+          </div>
+        </section>
+      )}
       <section className="admin-panel">
         <div className="section-heading">
           <h2>

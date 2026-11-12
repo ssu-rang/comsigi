@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     ws_send_timeout_seconds: float = Field(default=5, gt=0)
     ws_queue_size: int = Field(default=64, ge=2)
     max_ws_connections: int = Field(default=1000, ge=1)
+    pairing_code_ttl_seconds: int = Field(default=900, ge=60, le=86400)
+    registration_ttl_seconds: int = Field(default=86400, ge=60, le=604800)
+    registration_poll_seconds: int = Field(default=10, ge=1, le=300)
+    max_active_pairing_codes: int = Field(default=50, ge=1, le=1000)
 
     @field_validator("database_url")
     @classmethod

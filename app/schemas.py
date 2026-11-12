@@ -272,3 +272,100 @@ class LegacySeat(Schema):
 
 class LegacySeats(Schema):
     seats: list[LegacySeat]
+
+
+# Camera self-registration (pairing) contract.
+SeatNumbers = Annotated[list[PositiveInt], Field(max_length=500)]
+PrintableText = Annotated[str, Field(max_length=100, pattern=r"^[\x20-\x7e]*$")]
+RegistrationStatus = Literal["pending", "approved", "completed", "rejected", "expired", "removed"]
+
+
+class RegistrationRequest(Schema):
+    device_uid: DeviceUID
+    seat_numbers: SeatNumbers | None = None
+    seat_count: Annotated[StrictInt, Field(ge=0, le=500)] | None = None
+    model: PrintableText = ""
+    firmware_version: Annotated[str, Field(max_length=50, pattern=r"^[\x20-\x7e]*$")] = ""
+
+    @model_validator(mode="after")
+    def one_inventory(self):
+        if self.seat_numbers is not None and self.seat_count is not None:
+            raise ValueError("Send seat_numbers or seat_count, not both")
+        if self.seat_numbers is not None and len(set(self.seat_numbers)) != len(self.seat_numbers):
+            raise ValueError("Duplicate seat numbers")
+        return self
+
+    def inventory(self) -> list[int]:
+        """seat_count N means seats 1..N; seat_numbers are used as given."""
+        if self.seat_numbers is not None:
+            return sorted(self.seat_numbers)
+        return list(range(1, (self.seat_count or 0) + 1))
+
+
+class RegistrationAccepted(Schema):
+    status: Literal["pending"]
+    registration_secret: str
+    retry_after_seconds: int
+    expires_at: datetime
+
+
+class RegistrationStatusRequest(Schema):
+    device_uid: DeviceUID
+
+
+class RegistrationStatusOut(Schema):
+    status: RegistrationStatus
+    retryable: bool
+    retry_after_seconds: int | None = None
+    expires_at: datetime | None = None
+    credential: str | None = None
+
+
+class RegistrationConfirmOut(Schema):
+    status: Literal["completed"]
+
+
+class PairingCodeOut(Schema):
+    id: int
+    status: Literal["active", "used", "expired", "revoked"]
+    created_at: datetime
+    expires_at: datetime
+    used_at: datetime | None
+    revoked_at: datetime | None
+
+
+class PairingCodeIssued(PairingCodeOut):
+    code: str
+
+
+class RegistrationAdminOut(Schema):
+    id: int
+    device_uid: str
+    status: RegistrationStatus
+    model: str
+    firmware_version: str
+    seat_numbers: list[int]
+    requested_at: datetime
+    expires_at: datetime
+    decided_at: datetime | None
+    place_id: int | None
+    device_id: int | None
+
+
+class RegistrationApprove(Schema):
+    place_id: PositiveInt
+    name: Name
+    create_seats: StrictBool = True
+
+
+class RegistrationApproved(Schema):
+    registration: RegistrationAdminOut
+    device: DeviceAdminOut
+    seats_created: list[int]
+    seats_existing: list[int]
+
+
+class ProvisioningFailureOut(Schema):
+    device_uid: str | None
+    reason: str
+    at: datetime

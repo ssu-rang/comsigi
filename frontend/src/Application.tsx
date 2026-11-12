@@ -8,6 +8,7 @@ import { PlaceFinder } from "./PlaceFinder"
 import { PlacesAdmin } from "./admin/PlacesAdmin"
 import { LayoutEditor } from "./admin/LayoutEditor"
 import { DevicesAdmin } from "./admin/DevicesAdmin"
+import { PlaceSetup } from "./admin/PlaceSetup"
 import "./management.css"
 
 const DevPanel =
@@ -100,7 +101,11 @@ function Application() {
           <nav className="admin-nav" aria-label="관리자 메뉴">
             <Link
               to="/admin/places"
-              aria-current={segments[1] === "places" ? "page" : undefined}
+              aria-current={
+                segments[1] === "places" || segments[1] === "setup"
+                  ? "page"
+                  : undefined
+              }
             >
               공간 관리
             </Link>
@@ -139,6 +144,8 @@ function Application() {
           <AdminGate>
             {segments[1] === "layout" && segments[2] ? (
               <LayoutEditor key={segments[2]} placeId={segments[2]} />
+            ) : segments[1] === "setup" && segments[2] ? (
+              <PlaceSetup key={segments[2]} placeId={segments[2]} />
             ) : segments[1] === "devices" ? (
               <DevicesAdmin />
             ) : (

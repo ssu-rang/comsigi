@@ -1,7 +1,12 @@
 ﻿import assert from "node:assert/strict"
 import { test } from "node:test"
 import { ApiError, requestJson } from "./api.ts"
-import { decodeEvent, decodeLayout } from "./backend-contract.ts"
+import {
+  decodeEvent,
+  decodeFailure,
+  decodeLayout,
+  decodeRegistration,
+} from "./backend-contract.ts"
 import { saveBackendLayout } from "./backend-layout.ts"
 import { applyEvent, initialLive, visibleSeats } from "./realtime.ts"
 import type { Request } from "./backend.ts"
@@ -164,4 +169,40 @@ test("API error envelope and Pydantic details reach the form", async () => {
   } finally {
     globalThis.fetch = original
   }
+})
+
+test("camera registrations decode statuses and reject unknown values", () => {
+  const raw = {
+    id: 4,
+    device_uid: "e6614103e7a5b52b",
+    status: "pending",
+    model: "OpenMV H7",
+    firmware_version: "1.0",
+    seat_numbers: [1, 2, 3],
+    requested_at: "2026-01-01T00:00:00Z",
+    expires_at: "2026-01-02T00:00:00Z",
+    decided_at: null,
+    place_id: null,
+    device_id: null,
+  }
+  const decoded = decodeRegistration(raw)
+  assert.equal(decoded.id, "4")
+  assert.equal(decoded.status, "pending")
+  assert.deepEqual(decoded.seatNumbers, [1, 2, 3])
+  assert.equal(decoded.placeId, null)
+  assert.equal(
+    decodeRegistration({ ...raw, status: "approved", place_id: 1, device_id: 2 })
+      .deviceId,
+    "2",
+  )
+  assert.throws(() => decodeRegistration({ ...raw, status: "unknown" }), ApiError)
+  assert.throws(() => decodeRegistration({ ...raw, seat_numbers: [0] }), ApiError)
+  assert.deepEqual(
+    decodeFailure({
+      device_uid: null,
+      reason: "pairing_code_used",
+      at: "2026-01-01T00:00:00Z",
+    }),
+    { identifier: null, reason: "pairing_code_used", at: "2026-01-01T00:00:00Z" },
+  )
 })

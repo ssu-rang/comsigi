@@ -124,6 +124,50 @@ export interface SeatService {
   updateDevice(id: Id, input: DeviceInput, revision: number): Promise<Device>
   rotateToken(id: Id): Promise<string>
   subscribe(id: Id, sink: LiveSink): () => void
+  /** Camera self-registration; only the server API implements it. */
+  provisioning?: ProvisioningService
+}
+
+export type RegistrationStatus =
+  | "pending"
+  | "approved"
+  | "completed"
+  | "rejected"
+  | "expired"
+  | "removed"
+export type CameraRegistration = {
+  id: Id
+  identifier: string
+  status: RegistrationStatus
+  model: string
+  firmwareVersion: string
+  seatNumbers: number[]
+  requestedAt: string
+  expiresAt: string
+  placeId: Id | null
+  deviceId: Id | null
+}
+export type PairingCode = { code: string; expiresAt: string }
+export type ProvisioningFailure = {
+  identifier: string | null
+  reason: string
+  at: string
+}
+export type ApprovalResult = {
+  registration: CameraRegistration
+  device: Device
+  seatsCreated: number[]
+  seatsExisting: number[]
+}
+export interface ProvisioningService {
+  issuePairingCode(): Promise<PairingCode>
+  listRegistrations(signal?: AbortSignal): Promise<CameraRegistration[]>
+  listFailures(signal?: AbortSignal): Promise<ProvisioningFailure[]>
+  approve(
+    id: Id,
+    input: { placeId: Id; name: string; createSeats: boolean },
+  ): Promise<ApprovalResult>
+  reject(id: Id): Promise<CameraRegistration>
 }
 
 export const STATUS_LABEL = {

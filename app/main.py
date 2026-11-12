@@ -10,16 +10,17 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import admin, auth, hardware
+from app.api import admin, auth, hardware, provisioning
 from app.api.router import api_router
 from app.config import Settings
 from app.db import create_database
 from app.errors import DomainError
+from app.provisioning import ProvisioningState
 from app.realtime import Runtime
 from app.security import AuthState, HardwareRequestGuard
 
 logger = logging.getLogger(__name__)
-SCHEMA_REVISION = "0001_initial"
+SCHEMA_REVISION = "0002_device_provisioning"
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -31,6 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.session_factory = session_factory
         app.state.settings = settings
         app.state.auth = AuthState()
+        app.state.provisioning = ProvisioningState()
         app.state.runtime = runtime = Runtime(settings)
         try:
             try:
@@ -113,7 +115,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["Cache-Control"] = "no-store"
         return response
 
-    for router in (api_router, auth.router, admin.router, hardware.router):
+    for router in (
+        api_router,
+        auth.router,
+        admin.router,
+        hardware.router,
+        provisioning.router,
+        provisioning.admin_router,
+    ):
         app.include_router(router, prefix="/api/v1")
     if (settings.frontend_dist / "index.html").is_file():
         app.mount("/", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend")
