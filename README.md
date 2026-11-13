@@ -55,7 +55,7 @@ Railway 화면에서 최초 한 번 설정합니다.
 | `COMSIGI_DATABASE_URL` | `sqlite+aiosqlite:////data/comsigi.db` |
 | `COMSIGI_CORS_ORIGINS` | `["https://실제-Railway-도메인"]` |
 
-`COMSIGI_CORS_ORIGINS`에는 접속할 Railway 또는 커스텀 도메인의 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 같은 주소에서 제공하더라도 WebSocket Origin 검사에 필요합니다. 예전에 별도 프론트엔드 주소를 설정했다면 현재 사이트 주소로 변경합니다.
+`COMSIGI_CORS_ORIGINS`에는 접속할 Railway 또는 커스텀 도메인의 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 화면과 API를 같은 주소에서 제공하면 WebSocket은 이 값 없이도 연결됩니다. 예전에 별도 프론트엔드 주소를 설정했다면 현재 사이트 주소로 변경합니다.
 
 Volume은 관리자 계정·공간·배치·장치 설정을 재배포 후에도 유지합니다. DB 초기화가 실패하면 서버를 시작하지 않으며, Railway는 `/api/v1/ready`가 성공한 뒤 배포를 활성화합니다. 시작 명령은 Railway가 제공한 `PORT`를 사용하고, 서버는 단일 프로세스·replica 1개로 실행됩니다.
 
@@ -183,7 +183,7 @@ uv run pytest -q --basetemp=".test-tmp/run-$([guid]::NewGuid().ToString('N'))"
 
 - **Uvicorn worker는 반드시 1개**, 서버 replica도 1개입니다. 별도 프로세스·다중 컨테이너 간 메모리를 공유하지 않으며 다중 실행을 자동으로 막지는 않습니다. 제공한 `comsigi serve`는 workers=1로 실행합니다.
 - 운영에서는 HTTPS/WSS를 제공하는 역방향 프록시 뒤에서 실행하고 WebSocket Upgrade를 전달합니다. 프록시의 유휴 제한은 heartbeat보다 길게, 요청 본문 제한은 예를 들어 1 MiB로 설정합니다. `--reload`는 사용하지 않습니다.
-- `COMSIGI_CORS_ORIGINS`에 실제 프론트엔드 Origin(프로토콜·호스트·포트)을 명시합니다. 같은 도메인에서 제공해도 브라우저 WebSocket Origin을 등록해야 합니다. `*`는 허용하지 않습니다. Origin 없는 비브라우저 WebSocket 클라이언트는 허용합니다.
+- `COMSIGI_CORS_ORIGINS`에 실제 프론트엔드 Origin(프로토콜·호스트·포트)을 명시합니다. 화면을 제공한 주소와 같은 주소(Origin의 호스트·포트가 요청 Host와 일치)의 WebSocket은 등록 없이 허용하고, 다른 주소의 프론트엔드만 등록이 필요합니다. `*`는 허용하지 않습니다. Origin 없는 비브라우저 WebSocket 클라이언트는 허용합니다.
 - 프록시에서 전달하는 IP는 신뢰할 프록시만 설정합니다. 로그인은 클라이언트 IP당 60초에 10회로 제한되며, 프록시 설정이 없으면 프록시 IP를 공유합니다. 관리자 토큰 수와 WS 연결 수에도 상한이 있습니다.
 - SQLite 파일이 있는 디렉터리에 쓰기 권한을 부여하고 영구 볼륨을 사용합니다. WAL 모드의 실행 중 DB를 `.db` 파일만 복사해 백업하지 말고 SQLite backup API를 쓰거나 서버를 정상 종료한 뒤 백업합니다.
 - 설정은 관리 API를 통해 수정합니다. 실행 중 직접 SQL로 설정을 바꾸면 메모리 캐시에 반영되지 않습니다. CLI 비밀번호 변경은 예외로, 매 관리자 요청에서 DB 해시를 확인하므로 즉시 세션이 무효화됩니다.

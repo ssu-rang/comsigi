@@ -1,5 +1,6 @@
 import asyncio
 import json
+from urllib.parse import urlsplit
 
 from anyio import CancelScope
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
@@ -88,7 +89,12 @@ async def websocket_endpoint(websocket: WebSocket, slug: str):
     runtime = websocket.app.state.runtime
     settings = websocket.app.state.settings
     origin = websocket.headers.get("origin")
-    if origin and origin not in settings.cors_origins:
+    # The page that served this site may always subscribe: plain HTTP requests from
+    # it need no CORS entry either, so requiring one here only breaks live updates.
+    same_site = bool(origin) and (
+        urlsplit(origin).netloc.lower() == websocket.headers.get("host", "").lower()
+    )
+    if origin and not same_site and origin not in settings.cors_origins:
         await websocket.close(code=1008)
         return
     try:

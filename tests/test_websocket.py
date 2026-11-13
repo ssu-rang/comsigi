@@ -109,6 +109,15 @@ def test_websocket_rejects_missing_place_and_untrusted_origin(client, setup_room
             pass
 
 
+def test_websocket_accepts_the_origin_that_serves_the_site(client, setup_room):
+    # Not in cors_origins: a LAN address or deployed domain serving both page and API.
+    with client.websocket_connect(
+        "/api/v1/places/library/ws",
+        headers={"Origin": "https://seats.example", "Host": "seats.example"},
+    ) as ws:
+        assert ws.receive_json()["type"] == "snapshot"
+
+
 def test_invalid_client_message_disconnects(client, setup_room):
     with client.websocket_connect("/api/v1/places/library/ws") as ws:
         ws.receive_json()
