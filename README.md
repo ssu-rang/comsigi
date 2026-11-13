@@ -52,12 +52,12 @@ Railway 화면에서 최초 한 번 설정합니다.
 | 환경 변수 | 값 |
 | --- | --- |
 | `COMSIGI_ADMIN_PASSWORD` | 직접 정한 12–1024자 비밀번호 |
-| `COMSIGI_DATABASE_URL` | `sqlite+aiosqlite:////data/comsigi.db` |
+| `COMSIGI_DATABASE_URL` | 비워 두면 Volume 안의 `comsigi.db`를 자동으로 사용합니다. 직접 지정할 때는 `sqlite+aiosqlite:////data/comsigi.db`처럼 슬래시 4개로 Volume 안의 절대 경로를 씁니다. |
 | `COMSIGI_CORS_ORIGINS` | `["https://실제-Railway-도메인"]` |
 
 `COMSIGI_CORS_ORIGINS`에는 접속할 Railway 또는 커스텀 도메인의 Origin(프로토콜·호스트·필요한 경우 포트, 경로·끝 슬래시 제외)을 JSON 배열로 입력합니다. 화면과 API를 같은 주소에서 제공하면 WebSocket은 이 값 없이도 연결됩니다. 예전에 별도 프론트엔드 주소를 설정했다면 현재 사이트 주소로 변경합니다.
 
-Volume은 관리자 계정·공간·배치·장치 설정을 재배포 후에도 유지합니다. DB 초기화가 실패하면 서버를 시작하지 않으며, Railway는 `/api/v1/ready`가 성공한 뒤 배포를 활성화합니다. 시작 명령은 Railway가 제공한 `PORT`를 사용하고, 서버는 단일 프로세스·replica 1개로 실행됩니다.
+Volume은 관리자 계정·공간·배치·장치 설정을 재배포 후에도 유지합니다. Railway에서 Volume이 연결되지 않았거나 `COMSIGI_DATABASE_URL`이 Volume 밖(예: 슬래시 3개인 `sqlite+aiosqlite:///data/comsigi.db`)을 가리키면, 재배포 때마다 DB가 지워지므로 서버가 시작을 거부하고 배포가 실패합니다. DB 초기화가 실패하면 서버를 시작하지 않으며, Railway는 `/api/v1/ready`가 성공한 뒤 배포를 활성화합니다. 시작 명령은 Railway가 제공한 `PORT`를 사용하고, 서버는 단일 프로세스·replica 1개로 실행됩니다.
 
 Railway의 [설정 파일](https://docs.railway.com/config-as-code), [Volume](https://docs.railway.com/volumes), [시작 명령](https://docs.railway.com/deployments/start-command) 문서를 참고하세요. Volume은 Pre-deploy Command 컨테이너에 연결되지 않으므로 SQLite 초기화를 그곳으로 옮기지 않습니다.
 

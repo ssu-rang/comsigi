@@ -1,7 +1,10 @@
-from pathlib import Path
+import os
+from pathlib import Path, PurePosixPath
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+SQLITE_PREFIX = "sqlite+aiosqlite:///"
 
 
 class Settings(BaseSettings):
@@ -32,9 +35,32 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def sqlite_only(cls, value: str) -> str:
-        if not value.startswith("sqlite+aiosqlite:///"):
+        if not value.startswith(SQLITE_PREFIX):
             raise ValueError("Use a sqlite+aiosqlite:/// database URL")
         return value
+
+    @model_validator(mode="after")
+    def persistent_on_railway(self):
+        """Railway containers are rebuilt on every deploy; only the Volume survives."""
+        if not any(os.environ.get(k) for k in ("RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PROJECT_ID")):
+            return self
+        mount = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
+        if not mount:
+            raise ValueError(
+                "No Railway Volume is attached, so the database would be erased on every "
+                "deploy. Attach a Volume to this service (Mount Path /data)."
+            )
+        if "database_url" not in self.model_fields_set:
+            self.database_url = f"{SQLITE_PREFIX}{PurePosixPath(mount) / 'comsigi.db'}"
+            return self
+        path = PurePosixPath(self.database_url[len(SQLITE_PREFIX) :].split("?")[0])
+        if not path.is_absolute() or not path.is_relative_to(mount):
+            raise ValueError(
+                f"COMSIGI_DATABASE_URL points outside the Railway Volume ({mount}), so the "
+                "database would be erased on every deploy. Remove the variable or set it to "
+                f"{SQLITE_PREFIX}{PurePosixPath(mount) / 'comsigi.db'}"
+            )
+        return self
 
     @field_validator("cors_origins")
     @classmethod
