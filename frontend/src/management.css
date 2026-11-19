@@ -1,5 +1,5 @@
 /* Admin screens reuse the tokens defined in index.css. */
-:root { --negative: #a32e2e; --negative-bg: #fff4f2; --focus-surface: #f0f2ee; }
+:root { --negative: #a32e2e; --negative-bg: #fff4f2; --focus-surface: #f2f2f2; }
 @layer base {
   select, textarea { font-family: inherit; }
   textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -8,8 +8,8 @@
 }
 .header-nav a { display: flex; align-items: center; min-height: 44px; }
 .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 12px; min-height: 36px; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--surface); font-size: 13px; color: var(--text); white-space: nowrap; }
-.secondary-button:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-edge); color: var(--accent); }
-.secondary-button[aria-pressed=true] { background: var(--active); border-color: var(--accent-edge); }
+.secondary-button:hover:not(:disabled) { background: var(--raised); border-color: var(--unknown); }
+.secondary-button[aria-pressed=true] { background: var(--active); border-color: var(--unknown); }
 .inline-link { text-decoration: underline; text-underline-offset: 3px; min-height: 32px; display: inline-flex; align-items: center; }
 .notice { margin-block: 16px; padding: 16px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-control); line-height: 1.7; }
 .notice p + p { margin-top: 8px; }
@@ -59,7 +59,7 @@
 .admin-nav { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--control); margin-bottom: 24px; min-height: 44px; }
 .admin-nav a { padding-block: 12px; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; }
 .admin-nav a:hover { color: var(--text); }
-.admin-nav a[aria-current=page] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.admin-nav a[aria-current=page] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
 .admin-nav button { margin-left: auto; min-height: 44px; }
 .admin-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; }
@@ -102,7 +102,7 @@
 .assignment-grid .reserved { background: var(--ground); color: var(--muted); cursor: not-allowed; }
 .assignment-grid small { font-size: 11px; display: block; }
 .token-value { overflow-wrap: anywhere; }
-.login-panel { max-width: 440px; margin: 20px auto 40px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: var(--radius); padding: 28px; }
+.login-panel { max-width: 440px; margin: 20px auto 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
 .login-panel h1, .screen-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .login-panel > p { color: var(--muted); }
 .login-panel form > .primary-button { width: 100%; margin-block: 20px; }

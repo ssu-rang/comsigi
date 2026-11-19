@@ -14,7 +14,7 @@ import {
   SeatButton,
   Swatch,
 } from "./ui"
-import { SpatialMap } from "./SpatialMap"
+import { SpatialMap, ZoomControls } from "./SpatialMap"
 
 export function PlaceFinder({
   placeId,
@@ -278,7 +278,8 @@ function PlaceDetail({
   )
   const [selected, setSelected] = useState<string | null>(null),
     [availableOnly, setAvailableOnly] = useState(false),
-    [view, setView] = useState<"map" | "list">("map")
+    [view, setView] = useState<"map" | "list">("map"),
+    [zoom, setZoom] = useState(1)
   const seats = useMemo(
     () =>
       resource.data
@@ -322,6 +323,7 @@ function PlaceDetail({
   if (!resource.data) return null
   const { place } = resource.data
   const layout = resource.data.layout
+  const hasLayout = layout.seats.length > 0 || layout.tables.length > 0
   const chosen = seats.find((s) => s.id === selected)
   const times = Object.values(live.occupancy)
     .map((r) => r.observedAt)
@@ -444,16 +446,21 @@ function PlaceDetail({
             번호순 보기
           </button>
         </div>
-        <label className="available-filter flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={availableOnly}
-            onChange={(e) => setAvailableOnly(e.target.checked)}
-          />
-          빈자리만 보기
-        </label>
+        <div className="map-toolbar-end flex items-center">
+          <label className="available-filter flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={availableOnly}
+              onChange={(e) => setAvailableOnly(e.target.checked)}
+            />
+            빈자리만 보기
+          </label>
+          {view === "map" && hasLayout && (
+            <ZoomControls zoom={zoom} setZoom={setZoom} />
+          )}
+        </div>
       </div>
-      {!layout.seats.length && !layout.tables.length ? (
+      {!hasLayout ? (
         <EmptyState title="등록된 배치가 없습니다">
           관리자가 좌석과 테이블을 배치하면 여기에 표시됩니다.
         </EmptyState>
@@ -464,6 +471,7 @@ function PlaceDetail({
           selected={selected}
           onSelect={onSelect}
           availableOnly={availableOnly}
+          zoom={zoom}
         />
       ) : (
         <div className="number-view" aria-label="번호순 좌석 목록">

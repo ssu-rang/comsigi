@@ -55,7 +55,7 @@ export function PlaceSetup({ placeId }: { placeId: string }) {
       <div className="page-heading">
         <div>
           <h1>{place.name} 설정</h1>
-          <p>공간을 만든 뒤 카메라를 연결하고 좌석을 확인합니다. 언제든 다시 이어서 진행할 수 있습니다.</p>
+          <p>설정은 나중에 이어서 할 수 있습니다.</p>
         </div>
       </div>
       <ol className="setup-steps">

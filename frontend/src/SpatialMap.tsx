@@ -75,6 +75,7 @@ export function SpatialMap({
   onSelect = () => {},
   availableOnly = false,
   controls = true,
+  zoom: externalZoom,
   children,
 }: {
   layout: Layout
@@ -83,12 +84,15 @@ export function SpatialMap({
   onSelect?: (id: string) => void
   availableOnly?: boolean
   controls?: boolean
+  /** When given, the caller renders ZoomControls elsewhere (e.g. its own toolbar). */
+  zoom?: number
   children?: ReactNode
 }) {
-  const [zoom, setZoom] = useState(1)
+  const [ownZoom, setZoom] = useState(1)
+  const zoom = externalZoom ?? ownZoom
   return (
     <div className="spatial-view">
-      {controls && (
+      {controls && externalZoom === undefined && (
         <div className="spatial-tools">
           <ZoomControls zoom={zoom} setZoom={setZoom} />
         </div>
