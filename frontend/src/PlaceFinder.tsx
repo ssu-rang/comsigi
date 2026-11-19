@@ -72,11 +72,8 @@ export function PlaceFinder({
   }
   return (
     <>
-      <div className="page-heading flex items-end justify-between gap-4">
-        <div>
-          <h1>캠퍼스의 빈자리</h1>
-          <p>찾아가기 전에, 빈자리부터 확인하세요.</p>
-        </div>
+      <div className="page-heading flex items-center justify-between gap-4">
+        <h1>{favoritesOnly ? "즐겨찾기" : "좌석 현황"}</h1>
         <button
           className="secondary-button"
           onClick={places.reload}
@@ -106,9 +103,8 @@ export function PlaceFinder({
           <div id="places-content" className="places-content">
             <div className="places-heading flex items-center justify-between">
               <h2>
-                공간 찾기 <span>{places.data?.length ?? "–"}</span>
+                공간 <span>{places.data?.length ?? "–"}</span>
               </h2>
-              <Icon name="pin" size={16} />
             </div>
             <label className="search-field flex items-center gap-2">
               <Icon name="search" size={16} />
@@ -141,8 +137,7 @@ export function PlaceFinder({
               <Loading label="공간 목록을 불러오고 있습니다" />
             ) : places.error ? (
               <div className="empty-places">
-                <p>공간 목록을 표시할 수 없습니다.</p>
-                <span>공간 현황 안내를 확인해 주세요.</span>
+                <p>공간 목록을 불러오지 못했습니다.</p>
               </div>
             ) : (
               <div className="room-list">
@@ -172,7 +167,11 @@ export function PlaceFinder({
                         <Icon name="chevron" size={14} />
                       </span>
                       <span className="room-count-row">
-                        <span className="condition">
+                        <span
+                          className={`condition ${
+                            total.unknown === total.total ? "is-unknown" : ""
+                          }`}
+                        >
                           {total.unknown === total.total
                             ? "확인 불가"
                             : "이용 가능"}
@@ -206,12 +205,9 @@ export function PlaceFinder({
               </div>
             )}
             {!places.error && (
-              <div className="campus-total">
-                <span>선택한 공간은 실시간으로 갱신됩니다.</span>
-                <p className="list-freshness">
-                  나머지 공간은 목록 조회 시점 기준입니다.
-                </p>
-              </div>
+              <p className="campus-total list-freshness">
+                선택한 공간만 실시간으로 갱신됩니다.
+              </p>
             )}
           </div>
         </aside>
@@ -422,14 +418,13 @@ function PlaceDetail({
         <span>마지막 감지: {timestamp(observed)}</span>
         <span>
           {!online
-            ? "연결 중단 · 현재 점유 상태를 확인할 수 없습니다."
+            ? "연결 중단 · 현재 상태를 확인할 수 없습니다."
             : stale
-              ? "미수신 또는 오래된 좌석 정보는 확인 불가로 표시합니다."
-              : "최근 감지 정보가 표시됩니다."}
+              ? "오래된 감지 정보는 확인 불가로 표시됩니다."
+              : ""}
         </span>
         <span>
-          이용률 {counts.utilization === null ? "–" : `${counts.utilization}%`}{" "}
-          · 확인된 좌석 기준
+          이용률 {counts.utilization === null ? "–" : `${counts.utilization}%`}
         </span>
       </div>
       <div className="map-toolbar flex items-center justify-between gap-3">
@@ -515,14 +510,14 @@ function PlaceDetail({
             </button>
           </>
         ) : (
-          <span>좌석을 선택하면 상태를 확인할 수 있어요.</span>
+          <span>좌석을 누르면 상태가 표시됩니다.</span>
         )}
       </div>
       <div className="room-facts">
         <span>
           전체 {layout.seats.length}석 · 테이블 {layout.tables.length}개
         </span>
-        <span>저장된 배치 버전 {layout.revision}</span>
+        <span>배치 버전 {layout.revision}</span>
       </div>
     </>
   )

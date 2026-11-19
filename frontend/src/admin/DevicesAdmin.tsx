@@ -27,10 +27,7 @@ export function DevicesAdmin() {
   return (
     <>
       <div className="page-heading flex items-end justify-between gap-4">
-        <div>
-          <h1>장치 관리</h1>
-          <p>감지 장치와 공간의 좌석 번호를 연결합니다.</p>
-        </div>
+        <h1>장치 관리</h1>
         <button
           className="primary-button"
           disabled={!resource.data?.places.length}

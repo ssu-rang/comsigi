@@ -118,7 +118,6 @@ export function Login({ inline = false }: { inline?: boolean }) {
   return (
     <section className="login-panel">
       <h1>관리자 로그인</h1>
-      <p>공간 배치와 감지 장치를 관리합니다.</p>
       {auth.expired && (
         <p className="notice" role="status">
           인증이 만료되었습니다. 다시 로그인하면 편집 초안을 이어갈 수 있습니다.

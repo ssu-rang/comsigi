@@ -53,7 +53,6 @@ function Application() {
             <Icon name="chair" size={25} />
             <span>빈자리</span>
           </Link>
-          <span className="brand-caption">캠퍼스의 자리를 연결하다</span>
           <nav className="header-nav flex items-center" aria-label="주요 메뉴">
             <Link
               className={`nav-link ${!admin && !favorite ? "active" : ""}`}
@@ -167,11 +166,9 @@ function Application() {
           <p className="flex items-start gap-2">
             <Icon name="info" size={14} />
             <span>
-              감지 정보는 현장 상황과 차이가 있을 수 있습니다. 좌석 선택은
-              예약이 아닙니다.
+              감지 결과는 실제와 다를 수 있으며, 좌석 선택은 예약이 아닙니다.
             </span>
           </p>
-          <span>빈자리에서 시작하는 하루.</span>
         </footer>
         {DevPanel && (
           <Suspense fallback={null}>
@@ -197,7 +194,6 @@ function Application() {
             <Icon name="close" />
           </button>
         </div>
-        <p>가고 싶은 공간을 고르고, 이용 가능한 좌석을 확인하세요.</p>
         <dl className="help-states">
           {(["available", "occupied", "unknown"] as const).map((status) => (
             <div key={status}>
@@ -207,24 +203,23 @@ function Application() {
               </dt>
               <dd>
                 {status === "available"
-                  ? "비어 있는 것으로 감지된 좌석입니다."
+                  ? "비어 있는 좌석"
                   : status === "occupied"
-                    ? "현재 이용 중인 것으로 감지된 좌석입니다."
-                    : "감지 정보가 없거나 오래되어 현재 상태를 확인할 수 없습니다."}
+                    ? "사용 중인 좌석"
+                    : "감지 정보가 없거나 오래된 좌석"}
               </dd>
             </div>
           ))}
         </dl>
         <p className="help-note">
-          서버 연결 상태와 장치의 마지막 감지 시각은 별도로 표시합니다. 배치도는
-          확대 후 스크롤하여 이동할 수 있으며, 번호순 보기에서도 좌석 상태를
-          확인할 수 있습니다.
+          배치도는 확대한 뒤 스크롤해서 볼 수 있고, 번호순 보기로도 확인할 수
+          있습니다.
         </p>
         <button
           className="primary-button"
           onClick={() => help.current?.close()}
         >
-          확인했어요
+          닫기
         </button>
       </dialog>
     </div>

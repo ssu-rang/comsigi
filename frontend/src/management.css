@@ -1,4 +1,4 @@
-/* Extension of the existing Binjari tokens; the original UI palette and type stay. */
+/* Admin screens reuse the tokens defined in index.css. */
 :root { --negative: #a32e2e; --negative-bg: #fff4f2; --focus-surface: #f0f2ee; }
 @layer base {
   select, textarea { font-family: inherit; }
@@ -8,8 +8,8 @@
 }
 .header-nav a { display: flex; align-items: center; min-height: 44px; }
 .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 12px; min-height: 36px; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--surface); font-size: 13px; color: var(--text); white-space: nowrap; }
-.secondary-button:hover:not(:disabled) { background: var(--raised); border-color: var(--unknown); }
-.secondary-button[aria-pressed=true] { background: var(--active); border-color: var(--unknown); }
+.secondary-button:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-edge); color: var(--accent); }
+.secondary-button[aria-pressed=true] { background: var(--active); border-color: var(--accent-edge); }
 .inline-link { text-decoration: underline; text-underline-offset: 3px; min-height: 32px; display: inline-flex; align-items: center; }
 .notice { margin-block: 16px; padding: 16px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-control); line-height: 1.7; }
 .notice p + p { margin-top: 8px; }
@@ -33,6 +33,7 @@
 .seat-occupied .chair-shape::after { content: '−'; position: absolute; top: -5px; right: -4px; background: var(--occupied); font-size: 11px; width: 12px; height: 12px; border-radius: 4px; }
 .spatial-view { margin: 0 28px; min-width: 0; }
 .spatial-tools, .canvas-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; color: var(--muted); font-size: 12px; }
+.spatial-tools { justify-content: flex-end; padding: 0 0 8px; }
 .zoom-controls { display: inline-flex; gap: 0; align-items: center; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--surface); }
 .zoom-controls button { min-width: 32px; min-height: 32px; font-size: 13px; padding: 0 5px; }
 .canvas-scroll { overflow: auto; max-height: 65vh; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--raised); overscroll-behavior: contain; }
@@ -55,21 +56,23 @@
 .spatial-hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }
 .spatial-table { display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--control); border-radius: 4px; color: var(--muted); font-size: 12px; }
 .table-ellipse { border-radius: 50% !important; }
-.admin-nav { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--border); margin-bottom: 28px; min-height: 44px; }
-.admin-nav a { padding-block: 12px; color: var(--muted); }
-.admin-nav a[aria-current=page] { color: var(--text); border-bottom: 2px solid var(--text); }
+.admin-nav { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--control); margin-bottom: 24px; min-height: 44px; }
+.admin-nav a { padding-block: 12px; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.admin-nav a:hover { color: var(--text); }
+.admin-nav a[aria-current=page] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
 .admin-nav button { margin-left: auto; min-height: 44px; }
 .admin-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; }
-.section-heading h2, .section-heading h3 { font-size: 16px; font-weight: 500; }
+.section-heading h2, .section-heading h3 { font-size: 16px; font-weight: 700; }
 .section-heading h2 span, .section-heading h3 span { color: var(--muted); font-size: 13px; margin-left: 6px; }
 .admin-panel .data-state { margin: 0 24px 24px; min-height: 180px; }
 .data-state > .primary-button { display: inline-flex; margin-top: 18px; }
 .table-scroll { overflow: auto; padding: 0 24px 16px; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-.data-table th { font-size: 12px; font-weight: 400; color: var(--muted); padding: 10px 14px 10px 0; white-space: nowrap; }
+.data-table th { font-size: 12px; font-weight: 600; color: var(--muted); padding: 10px 14px 10px 0; white-space: nowrap; border-bottom: 1px solid var(--control); }
 .data-table td { padding: 18px 14px 18px 0; vertical-align: middle; border-top: 1px solid var(--rule); }
 .data-table td:last-child, .data-table th:last-child { padding-right: 0; }
+.data-table tbody tr:first-child td { border-top: 0; }
 .data-table td small { display: block; color: var(--muted); font-size: 12px; margin-top: 5px; }
 .data-table strong, .identity-link { font-weight: 500; }
 .table-scroll:focus-visible { outline-offset: -3px; }
@@ -99,8 +102,8 @@
 .assignment-grid .reserved { background: var(--ground); color: var(--muted); cursor: not-allowed; }
 .assignment-grid small { font-size: 11px; display: block; }
 .token-value { overflow-wrap: anywhere; }
-.login-panel { max-width: 440px; margin: 20px auto 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-.login-panel h1, .screen-title { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+.login-panel { max-width: 440px; margin: 20px auto 40px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: var(--radius); padding: 28px; }
+.login-panel h1, .screen-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .login-panel > p { color: var(--muted); }
 .login-panel form > .primary-button { width: 100%; margin-block: 20px; }
 .login-panel > .primary-button { margin-block: 16px; }

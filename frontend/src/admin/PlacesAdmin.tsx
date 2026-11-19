@@ -16,10 +16,7 @@ export function PlacesAdmin() {
   return (
     <>
       <div className="page-heading flex items-end justify-between gap-4">
-        <div>
-          <h1>공간 관리</h1>
-          <p>공간 정보와 좌석 배치를 관리합니다.</p>
-        </div>
+        <h1>공간 관리</h1>
         <button className="primary-button" onClick={() => setEditing("new")}>
           공간 만들기
         </button>

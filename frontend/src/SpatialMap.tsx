@@ -90,7 +90,6 @@ export function SpatialMap({
     <div className="spatial-view">
       {controls && (
         <div className="spatial-tools">
-          <span>저장된 공간 배치</span>
           <ZoomControls zoom={zoom} setZoom={setZoom} />
         </div>
       )}
@@ -132,7 +131,7 @@ export function SpatialMap({
       </div>
       {controls && (
         <p className="spatial-hint">
-          작은 좌석은 확대하면 번호가 표시됩니다. 번호별 보기에서도 확인할 수 있습니다.
+          좌석 번호가 안 보이면 확대하세요.
         </p>
       )}
     </div>
