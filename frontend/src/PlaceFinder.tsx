@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import { countSeats } from "./seats"
 import type { Summary } from "./domain"
 import { STATUS_LABEL, timestamp } from "./domain"
@@ -19,9 +26,11 @@ import { SpatialMap, ZoomControls } from "./SpatialMap"
 export function PlaceFinder({
   placeId,
   favoritesOnly,
+  footer,
 }: {
   placeId?: string
   favoritesOnly: boolean
+  footer?: ReactNode
 }) {
   const places = useResource((signal) => service.listPlaces(signal))
   useDataRefresh(places.reload)
@@ -62,6 +71,10 @@ export function PlaceFinder({
   useEffect(() => {
     setPlacesOpen(favoritesOnly || !placeId)
   }, [favoritesOnly, placeId])
+  const roomPanel = useRef<HTMLElement>(null)
+  useEffect(() => {
+    roomPanel.current?.scrollTo(0, 0)
+  }, [placeId])
   const toggleFavorite = () => {
     if (placeId)
       setFavorites((ids) =>
@@ -71,147 +84,141 @@ export function PlaceFinder({
       )
   }
   return (
-    <>
-      <div className="page-heading flex items-center justify-between gap-4">
-        <h1>{favoritesOnly ? "즐겨찾기" : "좌석 현황"}</h1>
+    <div className="workspace">
+      <aside
+        className={`places-panel ${placesOpen ? "is-open" : ""}`}
+        aria-label="공간 선택"
+      >
         <button
-          className="secondary-button"
-          onClick={places.reload}
-          disabled={places.loading}
+          className="mobile-place-toggle"
+          aria-expanded={placesOpen}
+          aria-controls="places-content"
+          onClick={() => setPlacesOpen((v) => !v)}
         >
-          <Icon name="refresh" size={15} />
-          목록 새로고침
+          <span>{selected?.name ?? "공간 찾기"}</span>
+          <span>
+            공간 변경
+            <Icon name="chevron" size={14} />
+          </span>
         </button>
-      </div>
-      <div className="workspace">
-        <aside
-          className={`places-panel ${placesOpen ? "is-open" : ""}`}
-          aria-label="공간 선택"
-        >
-          <button
-            className="mobile-place-toggle"
-            aria-expanded={placesOpen}
-            aria-controls="places-content"
-            onClick={() => setPlacesOpen((v) => !v)}
-          >
-            <span>{selected?.name ?? "공간 찾기"}</span>
-            <span>
-              공간 변경
-              <Icon name="chevron" size={14} />
-            </span>
-          </button>
-          <div id="places-content" className="places-content">
-            <div className="places-heading flex items-center justify-between">
-              <h2>
-                공간 <span>{places.data?.length ?? "–"}</span>
-              </h2>
-            </div>
-            <label className="search-field flex items-center gap-2">
-              <Icon name="search" size={16} />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="공간 이름 검색"
-                aria-label="공간 검색"
-              />
-            </label>
-            <div className="place-filters flex">
-              <button
-                className={!favoritesOnly ? "selected" : ""}
-                aria-pressed={!favoritesOnly}
-                onClick={() => navigate("/")}
-              >
-                전체 공간
-              </button>
-              <button
-                className={favoritesOnly ? "selected" : ""}
-                aria-pressed={favoritesOnly}
-                onClick={() => navigate("/favorites")}
-              >
-                <Icon name="star" size={14} />
-                즐겨찾기
-              </button>
-            </div>
-            {places.loading ? (
-              <Loading label="공간 목록을 불러오고 있습니다" />
-            ) : places.error ? (
-              <div className="empty-places">
-                <p>공간 목록을 불러오지 못했습니다.</p>
-              </div>
-            ) : (
-              <div className="room-list">
-                {shown.map((place) => {
-                  const total =
-                    liveSummary?.id === place.id && place.id === placeId
-                      ? liveSummary.counts
-                      : place.summary
-                  return (
-                    <Link
-                      key={place.id}
-                      to={`/places/${place.id}`}
-                      className={`room-item ${
-                        place.id === placeId ? "selected" : ""
-                      }`}
-                      aria-current={place.id === placeId ? "page" : undefined}
-                      onClick={() => setPlacesOpen(false)}
-                    >
-                      <span className="room-meta">
-                        {place.slug}
-                        {favorites.includes(place.id) && (
-                          <Icon name="star" size={12} />
-                        )}
-                      </span>
-                      <span className="room-name-row">
-                        <span>{place.name}</span>
-                        <Icon name="chevron" size={14} />
-                      </span>
-                      <span className="room-count-row">
-                        <span
-                          className={`condition ${
-                            total.unknown === total.total ? "is-unknown" : ""
-                          }`}
-                        >
-                          {total.unknown === total.total
-                            ? "확인 불가"
-                            : "이용 가능"}
-                        </span>
-                        <span>
-                          <b>{total.available}</b> / {total.total}석
-                        </span>
-                      </span>
-                    </Link>
-                  )
-                })}
-                {!shown.length && (
-                  <div className="empty-places">
-                    <p>
-                      {places.data?.length
-                        ? favoritesOnly
-                          ? "저장한 공간이 없습니다."
-                          : "검색 결과가 없습니다."
-                        : "등록된 공간이 없습니다."}
-                    </p>
-                    {query && (
-                      <button
-                        className="text-button"
-                        onClick={() => setQuery("")}
-                      >
-                        검색 지우기
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            {!places.error && (
-              <p className="campus-total list-freshness">
-                선택한 공간만 실시간으로 갱신됩니다.
-              </p>
-            )}
+        <div id="places-content" className="places-content">
+          <div className="places-heading flex items-center justify-between">
+            <h1>{favoritesOnly ? "즐겨찾기" : "좌석 현황"}</h1>
+            <button
+              className="places-refresh"
+              onClick={places.reload}
+              disabled={places.loading}
+              aria-label="목록 새로고침"
+              title="목록 새로고침"
+            >
+              <Icon name="refresh" size={15} />
+            </button>
           </div>
-        </aside>
-        <section className="room-panel" aria-label="공간 좌석 현황">
+          <label className="search-field flex items-center gap-2">
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="공간 이름 검색"
+              aria-label="공간 검색"
+            />
+          </label>
+          <div className="place-filters">
+            <button
+              className={!favoritesOnly ? "selected" : ""}
+              aria-pressed={!favoritesOnly}
+              onClick={() => navigate("/")}
+            >
+              <Icon name="pin" size={16} />
+              전체 공간
+            </button>
+            <button
+              className={favoritesOnly ? "selected" : ""}
+              aria-pressed={favoritesOnly}
+              onClick={() => navigate("/favorites")}
+            >
+              <Icon name="star" size={16} />
+              즐겨찾기
+            </button>
+          </div>
+          <h2 className="places-section-label">
+            공간 <span>{places.data?.length ?? "–"}</span>
+          </h2>
+          {places.loading ? (
+            <Loading label="공간 목록을 불러오고 있습니다" />
+          ) : places.error ? (
+            <div className="empty-places">
+              <p>공간 목록을 불러오지 못했습니다.</p>
+            </div>
+          ) : (
+            <div className="room-list">
+              {shown.map((place) => {
+                const total =
+                  liveSummary?.id === place.id && place.id === placeId
+                    ? liveSummary.counts
+                    : place.summary
+                const unknown = total.unknown === total.total
+                return (
+                  <Link
+                    key={place.id}
+                    to={`/places/${place.id}`}
+                    className={`room-item ${
+                      place.id === placeId ? "selected" : ""
+                    }`}
+                    aria-current={place.id === placeId ? "page" : undefined}
+                    onClick={() => setPlacesOpen(false)}
+                  >
+                    <span className="room-name-row">
+                      <span>{place.name}</span>
+                      <span className="room-count">
+                        <b>{total.available}</b> / {total.total}
+                      </span>
+                    </span>
+                    <span className="room-meta">
+                      <span
+                        className={`condition ${unknown ? "is-unknown" : ""}`}
+                      >
+                        {unknown ? "확인 불가" : "이용 가능"}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{place.slug}</span>
+                      {favorites.includes(place.id) && (
+                        <Icon name="star" size={12} />
+                      )}
+                    </span>
+                  </Link>
+                )
+              })}
+              {!shown.length && (
+                <div className="empty-places">
+                  <p>
+                    {places.data?.length
+                      ? favoritesOnly
+                        ? "저장한 공간이 없습니다."
+                        : "검색 결과가 없습니다."
+                      : "등록된 공간이 없습니다."}
+                  </p>
+                  {query && (
+                    <button
+                      className="text-button"
+                      onClick={() => setQuery("")}
+                    >
+                      검색 지우기
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </aside>
+      <section
+        ref={roomPanel}
+        className="room-panel"
+        aria-label="공간 좌석 현황"
+      >
+        <div className="room-body">
           {places.error ? (
             <>
               <div className="room-header">
@@ -238,14 +245,12 @@ export function PlaceFinder({
                   : "등록된 공간이 없습니다"
               }
             >
-              {places.data?.length
-                ? "공간 목록에서 좌석 현황을 확인할 장소를 선택하세요."
-                : "공간이 등록되면 좌석 배치와 이용 현황이 표시됩니다."}
             </EmptyState>
           )}
-        </section>
-      </div>
-    </>
+        </div>
+        {footer}
+      </section>
+    </div>
   )
 }
 function PlaceDetail({
@@ -313,7 +318,6 @@ function PlaceDetail({
           </Link>
         }
       >
-        다른 공간을 선택해 주세요.
       </EmptyState>
     )
   if (resource.loading)
@@ -350,7 +354,6 @@ function PlaceDetail({
               <Icon name="star" size={20} />
             </button>
           </div>
-          <p className="room-description">{place.description}</p>
         </div>
         <div className="room-freshness">
           <span className="freshness-label">
@@ -416,19 +419,6 @@ function PlaceDetail({
           <p>{counts.utilization === null ? "–" : `${counts.utilization}%`}</p>
         </div>
       </div>
-      <div className="freshness-note" role="status">
-        <span>마지막 감지: {timestamp(observed)}</span>
-        <span>
-          {!online
-            ? "연결 중단 · 현재 상태를 확인할 수 없습니다."
-            : stale
-              ? "오래된 감지 정보는 확인 불가로 표시됩니다."
-              : ""}
-        </span>
-        <span>
-          이용률 {counts.utilization === null ? "–" : `${counts.utilization}%`}
-        </span>
-      </div>
       <div className="map-toolbar flex items-center justify-between gap-3">
         <div className="view-switch flex" aria-label="좌석 보기 방식">
           <button
@@ -462,7 +452,6 @@ function PlaceDetail({
       </div>
       {!hasLayout ? (
         <EmptyState title="등록된 배치가 없습니다">
-          관리자가 좌석과 테이블을 배치하면 여기에 표시됩니다.
         </EmptyState>
       ) : view === "map" ? (
         <SpatialMap
@@ -520,12 +509,6 @@ function PlaceDetail({
         ) : (
           <span>좌석을 누르면 상태가 표시됩니다.</span>
         )}
-      </div>
-      <div className="room-facts">
-        <span>
-          전체 {layout.seats.length}석 · 테이블 {layout.tables.length}개
-        </span>
-        <span>배치 버전 {layout.revision}</span>
       </div>
     </>
   )

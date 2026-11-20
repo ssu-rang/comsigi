@@ -16,8 +16,8 @@
 .notice .row-actions, .notice .secondary-button { margin-top: 12px; }
 .error-notice { background: var(--negative-bg); border-color: var(--control); }
 .error-notice p { color: var(--negative); }
-.room-panel > .notice { margin: 8px 28px 24px; }
-.room-panel > .data-state { margin-block: 24px; }
+.room-body > .notice { margin: 8px 28px 24px; }
+.room-body > .data-state { margin-block: 24px; }
 .room-panel .data-state { min-height: 230px; }
 .loading-state { padding: 28px; color: var(--muted); }
 .skeleton { height: 24px; width: 80%; margin-top: 18px; background: var(--active); border-radius: 4px; }
@@ -36,7 +36,7 @@
 .spatial-tools { justify-content: flex-end; padding: 0 0 8px; }
 .zoom-controls { display: inline-flex; gap: 0; align-items: center; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--surface); }
 .zoom-controls button { min-width: 32px; min-height: 32px; font-size: 13px; padding: 0 5px; }
-.canvas-scroll { overflow: auto; max-height: 65vh; border: 1px solid var(--control); border-radius: var(--radius-control); background: var(--raised); overscroll-behavior: contain; }
+.canvas-scroll { overflow: auto; max-height: 65vh; border-radius: var(--radius); background: var(--raised); overscroll-behavior: contain; }
 .spatial-canvas { position: relative; min-width: 0; background: var(--raised); }
 .spatial-seat, .spatial-table { position: absolute; transform-origin: center; }
 .spatial-seat { z-index: 2; container-type: size; container-name: mapped-seat; }
@@ -210,7 +210,7 @@
   .properties { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .simulator-form { grid-template-columns: 1fr 1fr; }
   .login-panel { padding: 24px; margin-top: 0; }
-  .room-panel > .notice { margin-inline: 16px; }
+  .room-body > .notice { margin-inline: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .canvas-scroll { scroll-behavior: auto; } }
 

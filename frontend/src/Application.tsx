@@ -3,7 +3,6 @@ import { AuthProvider, AdminGate, Login, useAuth } from "./auth"
 import { Link, useRoute } from "./router"
 import { Icon, Swatch } from "./ui"
 import { STATUS_LABEL } from "./domain"
-import { service } from "./service"
 import { PlaceFinder } from "./PlaceFinder"
 import { PlacesAdmin } from "./admin/PlacesAdmin"
 import { LayoutEditor } from "./admin/LayoutEditor"
@@ -31,8 +30,21 @@ function Application() {
   const admin = route.startsWith("/admin")
   const segments = route.split("/").filter(Boolean)
   const favorite = route === "/favorites"
+  const finder =
+    route !== "/admin/login" &&
+    !admin &&
+    (route === "/" || favorite || segments[0] === "places")
+  const footer = (
+    <>
+      {DevPanel && (
+        <Suspense fallback={null}>
+          <DevPanel />
+        </Suspense>
+      )}
+    </>
+  )
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${finder ? "is-finder" : ""}`}>
       <a
         className="skip-link"
         href="#main-content"
@@ -83,16 +95,14 @@ function Application() {
           </button>
         </div>
       </header>
-      {import.meta.env.DEV && service.mode === "development" && (
-        <div className="dev-banner">
-          개발용 시뮬레이터 · 실제 장소 및 장치 데이터가 아닙니다 · 이
-          브라우저에만 저장됩니다
-        </div>
-      )}
       <main
         id="main-content"
         className={`main-container ${
-          segments[1] === "layout" ? "editor-container" : ""
+          finder
+            ? "finder-container"
+            : segments[1] === "layout"
+              ? "editor-container"
+              : ""
         }`}
         tabIndex={-1}
       >
@@ -151,10 +161,11 @@ function Application() {
               <PlacesAdmin />
             )}
           </AdminGate>
-        ) : route === "/" || favorite || segments[0] === "places" ? (
+        ) : finder ? (
           <PlaceFinder
             placeId={segments[0] === "places" ? segments[1] : undefined}
             favoritesOnly={favorite}
+            footer={footer}
           />
         ) : (
           <section className="login-panel">
@@ -162,19 +173,7 @@ function Application() {
             <Link to="/">공간 목록으로 돌아가기</Link>
           </section>
         )}
-        <footer className="page-footer">
-          <p className="flex items-start gap-2">
-            <Icon name="info" size={14} />
-            <span>
-              감지 결과는 실제와 다를 수 있으며, 좌석 선택은 예약이 아닙니다.
-            </span>
-          </p>
-        </footer>
-        {DevPanel && (
-          <Suspense fallback={null}>
-            <DevPanel />
-          </Suspense>
-        )}
+        {!finder && footer}
       </main>
       <dialog
         ref={help}
@@ -201,20 +200,9 @@ function Application() {
                 <Swatch status={status} />
                 {STATUS_LABEL[status]}
               </dt>
-              <dd>
-                {status === "available"
-                  ? "비어 있는 좌석"
-                  : status === "occupied"
-                    ? "사용 중인 좌석"
-                    : "감지 정보가 없거나 오래된 좌석"}
-              </dd>
             </div>
           ))}
         </dl>
-        <p className="help-note">
-          배치도는 확대한 뒤 스크롤해서 볼 수 있고, 번호순 보기로도 확인할 수
-          있습니다.
-        </p>
         <button
           className="primary-button"
           onClick={() => help.current?.close()}
