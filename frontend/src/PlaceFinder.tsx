@@ -149,7 +149,7 @@ export function PlaceFinder({
             <Loading label="공간 목록을 불러오고 있습니다" />
           ) : places.error ? (
             <div className="empty-places">
-              <p>공간 목록을 불러오지 못했습니다.</p>
+              <p>공간 목록을 불러오지 못했습니다</p>
             </div>
           ) : (
             <div className="room-list">
@@ -195,9 +195,9 @@ export function PlaceFinder({
                   <p>
                     {places.data?.length
                       ? favoritesOnly
-                        ? "저장한 공간이 없습니다."
-                        : "검색 결과가 없습니다."
-                      : "등록된 공간이 없습니다."}
+                        ? "저장한 공간이 없습니다"
+                        : "검색 결과가 없습니다"
+                      : "등록된 공간이 없습니다"}
                   </p>
                   {query && (
                     <button
@@ -478,8 +478,8 @@ function PlaceDetail({
           {!seats.some((s) => !availableOnly || s.status === "available") && (
             <p className="no-seats">
               {seats.length
-                ? "이용 가능한 좌석이 없습니다."
-                : "등록된 좌석이 없습니다."}
+                ? "이용 가능한 좌석이 없습니다"
+                : "등록된 좌석이 없습니다"}
             </p>
           )}
         </div>
@@ -507,7 +507,7 @@ function PlaceDetail({
             </button>
           </>
         ) : (
-          <span>좌석을 누르면 상태가 표시됩니다.</span>
+          <span>좌석을 누르면 상태가 표시됩니다</span>
         )}
       </div>
     </>

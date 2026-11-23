@@ -135,7 +135,7 @@ export function SpatialMap({
       </div>
       {controls && (
         <p className="spatial-hint">
-          좌석 번호가 안 보이면 확대하세요.
+          좌석 번호가 안 보이면 확대하세요
         </p>
       )}
     </div>

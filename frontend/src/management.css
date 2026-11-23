@@ -23,7 +23,7 @@
 .skeleton { height: 24px; width: 80%; margin-top: 18px; background: var(--active); border-radius: 4px; }
 .skeleton.short { width: 45%; }
 .list-freshness { font-size: 12px; color: var(--faint); }
-.freshness-note { margin: 14px 28px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 12px; }
+.freshness-note { margin: 16px 28px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 12px; }
 .freshness-note span:first-child { color: var(--text); }
 .freshness-note span:last-child { margin-left: auto; }
 .freshness-note span:last-child { display: none; }
@@ -53,7 +53,7 @@
     inset: 0; margin: auto; background: transparent; width: 11px; height: 11px;
   }
 }
-.spatial-hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }
+.spatial-hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 12px; }
 .spatial-table { display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--control); border-radius: 4px; color: var(--muted); font-size: 12px; }
 .table-ellipse { border-radius: 50% !important; }
 .admin-nav { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--control); margin-bottom: 24px; min-height: 44px; }
@@ -63,7 +63,7 @@
 .admin-nav button { margin-left: auto; min-height: 44px; }
 .admin-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; }
-.section-heading h2, .section-heading h3 { font-size: 16px; font-weight: 700; }
+.section-heading h2, .section-heading h3 { font-size: 16px; font-weight: 600; }
 .section-heading h2 span, .section-heading h3 span { color: var(--muted); font-size: 13px; margin-left: 6px; }
 .admin-panel .data-state { margin: 0 24px 24px; min-height: 180px; }
 .data-state > .primary-button { display: inline-flex; margin-top: 18px; }
@@ -103,7 +103,7 @@
 .assignment-grid small { font-size: 11px; display: block; }
 .token-value { overflow-wrap: anywhere; }
 .login-panel { max-width: 440px; margin: 20px auto 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-.login-panel h1, .screen-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.login-panel h1, .screen-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
 .login-panel > p { color: var(--muted); }
 .login-panel form > .primary-button { width: 100%; margin-block: 20px; }
 .login-panel > .primary-button { margin-block: 16px; }
